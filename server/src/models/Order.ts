@@ -60,6 +60,11 @@ const orderSchema = new Schema<IOrder>({
     type: Number,
     required: true,
   },
+  currency: {
+    type: String,
+    required: true,
+    default: 'USD',
+  },
   status: {
     type: String,
     enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],

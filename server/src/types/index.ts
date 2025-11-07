@@ -108,6 +108,7 @@ export interface IOrder extends Document {
   tax: number;
   shipping: number;
   total: number;
+  currency: string;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   trackingNumber?: string;
   estimatedDelivery?: Date;

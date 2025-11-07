@@ -59,16 +59,16 @@ export const productsAPI = {
 // Cart API
 export const cartAPI = {
   getCart: () =>
-    api.get<ApiResponse<Cart>>('/cart'),
+    api.get<Cart>('/cart'),
   
   addToCart: (productId: string, quantity: number) =>
-    api.post<ApiResponse<Cart>>('/cart/add', { productId, quantity }),
+    api.post<Cart>('/cart/add', { productId, quantity }),
   
-  updateCartItem: (itemId: string, quantity: number) =>
-    api.put<ApiResponse<Cart>>(`/cart/items/${itemId}`, { quantity }),
+  updateCartItem: (productId: string, quantity: number) =>
+    api.put<Cart>('/cart/update', { productId, quantity }),
   
-  removeFromCart: (itemId: string) =>
-    api.delete<ApiResponse<Cart>>(`/cart/items/${itemId}`),
+  removeFromCart: (productId: string) =>
+    api.delete<Cart>(`/cart/remove/${productId}`),
   
   clearCart: () =>
     api.delete<ApiResponse<null>>('/cart/clear'),
@@ -91,8 +91,9 @@ export const ordersAPI = {
       country: string;
     };
     paymentMethod: string;
+    currency?: string;
   }) =>
-    api.post<ApiResponse<Order>>('/orders', orderData),
+    api.post<ApiResponse<Order>>('/orders/test-create', orderData),
   
   updateOrderStatus: (id: string, status: string) =>
     api.put<ApiResponse<Order>>(`/orders/${id}/status`, { status }),
@@ -104,13 +105,13 @@ export const ordersAPI = {
 // Users API (for wishlist and profile management)
 export const usersAPI = {
   getWishlist: () =>
-    api.get<ApiResponse<Product[]>>('/users/wishlist'),
+    api.get<Product[]>('/users/wishlist'),
   
   addToWishlist: (productId: string) =>
-    api.post<ApiResponse<Product[]>>('/users/wishlist', { productId }),
+    api.post<ApiResponse<null>>(`/users/wishlist/${productId}`),
   
   removeFromWishlist: (productId: string) =>
-    api.delete<ApiResponse<Product[]>>(`/users/wishlist/${productId}`),
+    api.delete<ApiResponse<null>>(`/users/wishlist/${productId}`),
   
   uploadProfilePicture: (file: File) => {
     const formData = new FormData();

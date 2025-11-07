@@ -39,13 +39,13 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-md">
+    <header className="sticky top-0 z-50 bg-gradient-to-r from-nude-50 via-white to-nude-50 dark:from-dark-900 dark:via-dark-800 dark:to-dark-900 shadow-lg border-b border-gold-200 dark:border-dark-700">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link 
             to="/" 
-            className="text-2xl font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+            className="text-2xl font-bold bg-gradient-to-r from-gold-500 to-gold-600 bg-clip-text text-transparent hover:from-gold-600 hover:to-gold-700 transition-all duration-300 hover:scale-105"
           >
             ShopHub
           </Link>
@@ -56,7 +56,7 @@ const Header = () => {
               <input
                 type="text"
                 placeholder="Search products..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                className="w-full pl-10 pr-4 py-2 border border-nude-300 dark:border-dark-600 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 bg-nude-50 dark:bg-dark-800 text-dark-900 dark:text-nude-100 placeholder-dark-600 dark:placeholder-nude-400"
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
                     const value = (e.target as HTMLInputElement).value;
@@ -66,7 +66,7 @@ const Header = () => {
                   }
                 }}
               />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-dark-500 dark:text-nude-400 w-4 h-4" />
             </div>
           </div>
 

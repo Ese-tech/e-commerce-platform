@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Search, Filter, Grid, List, Heart, ShoppingCart } from 'lucide-react';
-import { productsAPI } from '../services';
+import { productsAPI, cartAPI, usersAPI } from '../services';
+import { useCartStore } from '../store/cartStore';
+import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
 
 interface Product {
@@ -26,6 +28,10 @@ const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
+  const [wishlistItems, setWishlistItems] = useState<string[]>([]);
+
+  const { cart, addItem, setCart } = useCartStore();
+  const { user } = useAuthStore();
 
   const categories = ['electronics', 'clothing', 'books', 'home', 'sports', 'beauty', 'toys'];
 
@@ -86,13 +92,93 @@ const Products = () => {
 
   const handleAddToCart = async (product: Product) => {
     try {
-      // For now, just show a toast message
-      // We'll implement proper cart functionality next
-      toast.success(`${product.name} added to cart`);
+      // Create a cart item from the product
+      const cartItem = {
+        product: {
+          _id: product._id,
+          name: product.name,
+          price: product.price,
+          images: product.images,
+          stock: product.stock
+        },
+        quantity: 1,
+        price: product.price
+      };
+
+      // If user is logged in, add to cart on server
+      try {
+        await cartAPI.addToCart(product._id, 1);
+        // Fetch updated cart from server
+        const cartResponse = await cartAPI.getCart();
+        setCart(cartResponse.data || null);
+        toast.success(`${product.name} added to cart`);
+      } catch (error: any) {
+        // If not logged in or API fails, add to local cart
+        if (error.response?.status === 401) {
+          // Create a temporary cart if none exists
+          if (!cart) {
+            const tempCart = {
+              _id: 'temp',
+              user: 'temp',
+              items: [cartItem],
+              totalAmount: product.price,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            };
+            setCart(tempCart);
+          } else {
+            addItem(cartItem);
+          }
+          toast.success(`${product.name} added to cart`);
+        } else {
+          throw error;
+        }
+      }
     } catch (error) {
+      console.error('Error adding to cart:', error);
       toast.error('Failed to add to cart');
     }
   };
+
+  const handleToggleWishlist = async (productId: string) => {
+    if (!user) {
+      toast.error('Please sign in to add items to wishlist');
+      return;
+    }
+
+    try {
+      const isInWishlist = wishlistItems.includes(productId);
+      
+      if (isInWishlist) {
+        await usersAPI.removeFromWishlist(productId);
+        setWishlistItems(prev => prev.filter(id => id !== productId));
+        toast.success('Removed from wishlist');
+      } else {
+        await usersAPI.addToWishlist(productId);
+        setWishlistItems(prev => [...prev, productId]);
+        toast.success('Added to wishlist');
+      }
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
+      toast.error('Failed to update wishlist');
+    }
+  };
+
+  const fetchWishlist = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await usersAPI.getWishlist();
+      const wishlist = response.data as any[];
+      setWishlistItems(wishlist.map(item => item._id));
+    } catch (error) {
+      console.error('Error fetching wishlist:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchWishlist();
+  }, [user]);
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -294,8 +380,17 @@ const Products = () => {
                       alt={product.images[0]?.alt || product.name}
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                     />
-                    <button className="absolute top-2 right-2 p-2 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                      <Heart className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                    <button 
+                      onClick={() => handleToggleWishlist(product._id)}
+                      className="absolute top-2 right-2 p-2 bg-white dark:bg-gray-800 rounded-full shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <Heart 
+                        className={`w-4 h-4 ${
+                          wishlistItems.includes(product._id)
+                            ? 'text-red-500 fill-current'
+                            : 'text-gray-600 dark:text-gray-300'
+                        }`} 
+                      />
                     </button>
                   </div>
 
@@ -329,15 +424,25 @@ const Products = () => {
                       <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
                         ${product.price.toFixed(2)}
                       </span>
-                      <span className={`text-sm ${
-                        product.stock > 10 
-                          ? 'text-green-600 dark:text-green-400' 
-                          : product.stock > 0 
-                          ? 'text-yellow-600 dark:text-yellow-400' 
-                          : 'text-red-600 dark:text-red-400'
-                      }`}>
-                        {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
-                      </span>
+                      {user?.isAdmin ? (
+                        <span className={`text-sm ${
+                          product.stock > 10 
+                            ? 'text-green-600 dark:text-green-400' 
+                            : product.stock > 0 
+                            ? 'text-yellow-600 dark:text-yellow-400' 
+                            : 'text-red-600 dark:text-red-400'
+                        }`}>
+                          {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                        </span>
+                      ) : (
+                        <span className={`text-sm ${
+                          product.stock > 0 
+                            ? 'text-green-600 dark:text-green-400' 
+                            : 'text-red-600 dark:text-red-400'
+                        }`}>
+                          {product.stock > 0 ? 'In Stock' : 'Out of stock'}
+                        </span>
+                      )}
                     </div>
 
                     {/* Add to Cart Button */}

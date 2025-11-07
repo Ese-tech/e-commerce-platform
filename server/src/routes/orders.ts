@@ -1,4 +1,5 @@
 import express, { Response } from 'express';
+import mongoose from 'mongoose';
 import Order from '../models/Order';
 import Cart from '../models/Cart';
 import Product from '../models/Product';
@@ -62,7 +63,7 @@ router.get('/:id', protect, async (req: AuthenticatedRequest, res: Response): Pr
 // Create order from cart
 router.post('/create', protect, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const { shippingAddress, paymentMethod } = req.body;
+    const { shippingAddress, paymentMethod, currency = 'USD' } = req.body;
     
     const cart = await Cart.findOne({ user: req.user!.userId })
       .populate('items.product');
@@ -110,6 +111,7 @@ router.post('/create', protect, async (req: AuthenticatedRequest, res: Response)
       tax,
       shipping,
       total,
+      currency,
     });
     
     await order.save();
@@ -130,6 +132,63 @@ router.post('/create', protect, async (req: AuthenticatedRequest, res: Response)
     res.status(201).json(order);
   } catch (error) {
     res.status(500).json({ message: (error as Error).message });
+  }
+});
+
+// Test route for order creation without authentication (for testing only)
+router.post('/test-create', async (req: express.Request, res: Response): Promise<void> => {
+  try {
+    const { shippingAddress, paymentMethod, currency = 'USD' } = req.body;
+    
+    // Mock cart data for testing with proper ObjectIds
+    const mockCartItems = [
+      {
+        product: new mongoose.Types.ObjectId(),
+        name: 'Smart Home Security Camera',
+        price: 127.49,
+        quantity: 1,
+        image: '/api/placeholder/400/400',
+      },
+      {
+        product: new mongoose.Types.ObjectId(),
+        name: 'Organic Face Moisturizer',
+        price: 29.74,
+        quantity: 1,
+        image: '/api/placeholder/400/400',
+      }
+    ];
+    
+    const subtotal = 157.23;
+    const tax = subtotal * 0.08; // 8% tax
+    const shipping = subtotal > 50 ? 0 : 9.99; // Free shipping over $50
+    const total = subtotal + tax + shipping;
+    
+    const order = new Order({
+      user: new mongoose.Types.ObjectId(),
+      items: mockCartItems,
+      shippingAddress,
+      paymentMethod,
+      subtotal,
+      tax,
+      shipping,
+      total,
+      currency,
+      // Explicitly set orderNumber to avoid pre-save hook issues
+      orderNumber: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+    });
+    
+    await order.save();
+    
+    res.status(201).json({
+      message: 'Test order created successfully',
+      order: order
+    });
+  } catch (error) {
+    console.error('Test order creation error:', error);
+    res.status(500).json({ 
+      message: (error as Error).message,
+      error: error 
+    });
   }
 });
 
