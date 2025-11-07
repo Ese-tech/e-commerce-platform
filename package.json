@@ -1,0 +1,37 @@
+{
+  "name": "e-commerce-platform",
+  "version": "1.0.0",
+  "description": "Full-stack e-commerce platform with React, TypeScript, Node.js, and MongoDB",
+  "scripts": {
+    "dev": "concurrently \"bun run server:dev\" \"bun run client:dev\"",
+    "server:dev": "cd server && bun run dev",
+    "client:dev": "cd client && bun run dev",
+    "build": "bun run server:build && bun run client:build",
+    "server:build": "cd server && bun run build",
+    "client:build": "cd client && bun run build",
+    "start": "bun run server:start",
+    "server:start": "cd server && bun start",
+    "test": "concurrently \"bun run server:test\" \"bun run client:test\"",
+    "server:test": "cd server && bun test",
+    "client:test": "cd client && bun test",
+    "install:all": "bun install && cd server && bun install && cd ../client && bun install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "."
+  },
+  "keywords": [
+    "e-commerce",
+    "react",
+    "typescript",
+    "nodejs",
+    "mongodb",
+    "stripe",
+    "tailwind"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
