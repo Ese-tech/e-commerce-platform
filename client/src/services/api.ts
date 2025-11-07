@@ -30,8 +30,8 @@ api.interceptors.response.use(
   (error: AxiosError) => {
     // Handle common errors
     if (error.response?.status === 401) {
-      // Unauthorized - redirect to login or clear auth state
-      window.location.href = '/login';
+      // Unauthorized - just log the error, don't redirect
+      console.log('Unauthorized request, user not logged in');
     }
     return Promise.reject(error);
   }

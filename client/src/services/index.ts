@@ -5,8 +5,8 @@ import type {
   Cart, 
   Order,
   ApiResponse,
-  PaginatedResponse,
-  ProductFilters
+  ProductFilters,
+  ProductsResponse
 } from '../types';
 
 // Auth API
@@ -36,13 +36,13 @@ export const authAPI = {
 // Products API
 export const productsAPI = {
   getProducts: (filters?: ProductFilters) =>
-    api.get<ApiResponse<PaginatedResponse<Product>>>('/products', { params: filters }),
+    api.get<ProductsResponse>('/products', { params: filters }),
   
   getProduct: (id: string) =>
     api.get<ApiResponse<Product>>(`/products/${id}`),
   
   searchProducts: (query: string, filters?: ProductFilters) =>
-    api.get<ApiResponse<PaginatedResponse<Product>>>('/products/search', { 
+    api.get<ProductsResponse>('/products/search', { 
       params: { query, ...filters } 
     }),
   

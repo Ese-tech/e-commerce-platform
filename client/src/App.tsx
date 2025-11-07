@@ -22,6 +22,11 @@ import Orders from './pages/Orders';
 import Wishlist from './pages/Wishlist';
 import NotFound from './pages/NotFound';
 
+// Admin Components
+import AdminLayout from './components/admin/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminProducts from './pages/admin/AdminProducts';
+
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,9 +47,9 @@ function App() {
   }, [theme]);
 
   useEffect(() => {
-    // Load user on app start
+    // Load user on app start - only once
     loadUser();
-  }, [loadUser]);
+  }, []); // Empty dependency array to run only once
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -63,6 +68,17 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/orders" element={<Orders />} />
               <Route path="/wishlist" element={<Wishlist />} />
+              
+              {/* Admin Routes */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="products" element={<AdminProducts />} />
+                <Route path="orders" element={<div>Admin Orders - Coming Soon</div>} />
+                <Route path="users" element={<div>Admin Users - Coming Soon</div>} />
+                <Route path="analytics" element={<div>Admin Analytics - Coming Soon</div>} />
+                <Route path="settings" element={<div>Admin Settings - Coming Soon</div>} />
+              </Route>
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
