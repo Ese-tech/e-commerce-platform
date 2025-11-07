@@ -36,7 +36,6 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
-}
 
 export interface IReview extends Document {
   user: Types.ObjectId;
@@ -57,7 +56,7 @@ export interface IProduct extends Document {
     alt: string;
   }>;
   stock: number;
-  reviews: IReview[];
+  reviews: Types.DocumentArray<IReview>;
   averageRating: number;
   reviewCount: number;
   tags: string[];

@@ -48,18 +48,18 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ message: 'Route not found' });
-});
-
 // Error handling middleware
 app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(error.stack);
   res.status(500).json({ 
     message: 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+    error: process.env.NODE_ENV === 'development' ? error.message : undefined
   });
+});
+
+// 404 handler - must be last
+app.use((req: express.Request, res: express.Response) => {
+  res.status(404).json({ message: `Route ${req.method} ${req.path} not found` });
 });
 
 app.listen(port, () => {
