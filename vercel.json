@@ -1,10 +1,13 @@
 {
   "version": 2,
-  "installCommand": "cd client && npm install --legacy-peer-deps",
-  "buildCommand": "cd client && npm run build",
-  "outputDirectory": "client/dist",
-  "framework": null,
   "builds": [
+    {
+      "src": "client/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
     {
       "src": "server/index.js",
       "use": "@vercel/node"
@@ -16,8 +19,14 @@
       "dest": "/server/index.js"
     },
     {
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2))",
+      "dest": "/client/$1"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/client/dist/$1"
+      "dest": "/client/index.html"
     }
-  ]
+  ],
+  "installCommand": "bun install",
+  "buildCommand": "cd client && bun run build"
 }

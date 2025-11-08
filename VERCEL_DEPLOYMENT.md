@@ -15,12 +15,13 @@
 ### 3. Build Konfiguration
 ```
 Framework Preset: Other
-Build Command: (leave empty - configured in vercel.json)
-Output Directory: (leave empty - configured in vercel.json)
-Install Command: (leave empty - configured in vercel.json)
+Build Command: bun run build
+Output Directory: dist
+Install Command: bun install
+Root Directory: client
 ```
 
-**⚠️ Wichtig:** Lassen Sie alle Build-Felder leer! Die Konfiguration erfolgt über `vercel.json`
+**⚠️ Wichtig:** Setzen Sie das Root Directory auf `client` und verwenden Sie `bun`!
 
 ### 4. Environment Variables einrichten
 Gehen Sie zu **Settings → Environment Variables** und fügen Sie hinzu:
@@ -44,7 +45,7 @@ Gehen Sie zu **Settings → Environment Variables** und fügen Sie hinzu:
 
 #### Other
 - `NODE_ENV`: production
-- `CLIENT_URL`: https://ihr-projekt.vercel.app
+- `CLIENT_URL`: https://e-commerce-platform-plum.vercel.app
 
 ### 5. Deployment
 1. Klicken Sie auf "Deploy"
@@ -56,7 +57,7 @@ Gehen Sie zu **Settings → Environment Variables** und fügen Sie hinzu:
 ### Stripe Webhooks konfigurieren
 1. Gehen Sie zu Stripe Dashboard
 2. Developers → Webhooks
-3. Fügen Sie hinzu: `https://ihr-projekt.vercel.app/api/payments/webhook`
+3. Fügen Sie hinzu: `https://e-commerce-platform-plum.vercel.app/api/payments/webhook`
 4. Events: `payment_intent.succeeded`, `payment_intent.payment_failed`
 
 ### Domain & SSL
