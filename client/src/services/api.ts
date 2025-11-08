@@ -1,6 +1,6 @@
 import axios, { type AxiosResponse, type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Create axios instance with default config
 export const api = axios.create({

@@ -45,7 +45,7 @@ Gehen Sie zu **Settings → Environment Variables** und fügen Sie hinzu:
 
 #### Other
 - `NODE_ENV`: production
-- `CLIENT_URL`: https://e-commerce-platform-plum.vercel.app
+- `CLIENT_URL`: https://e-commerce-platform-btso.vercel.app
 
 ### 5. Deployment
 1. Klicken Sie auf "Deploy"
@@ -57,7 +57,7 @@ Gehen Sie zu **Settings → Environment Variables** und fügen Sie hinzu:
 ### Stripe Webhooks konfigurieren
 1. Gehen Sie zu Stripe Dashboard
 2. Developers → Webhooks
-3. Fügen Sie hinzu: `https://e-commerce-platform-plum.vercel.app/api/payments/webhook`
+3. Fügen Sie hinzu: `https://e-commerce-platform-btso.vercel.app/api/payments/webhook`
 4. Events: `payment_intent.succeeded`, `payment_intent.payment_failed`
 
 ### Domain & SSL

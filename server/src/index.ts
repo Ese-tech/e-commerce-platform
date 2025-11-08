@@ -20,7 +20,13 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: [
+    process.env.CLIENT_URL || 'http://localhost:5173',
+    'https://e-commerce-platform-plum.vercel.app',
+    'https://e-commerce-platform-btso.vercel.app',
+    'https://e-commerce-platform-git-main-ese-techs-projects.vercel.app',
+    /https:\/\/e-commerce-platform-.*\.vercel\.app$/
+  ],
   credentials: true,
 }));
 app.use(express.json());
