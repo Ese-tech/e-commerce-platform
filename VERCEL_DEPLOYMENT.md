@@ -15,10 +15,12 @@
 ### 3. Build Konfiguration
 ```
 Framework Preset: Other
-Build Command: cd client && npm run build
-Output Directory: client/dist
-Install Command: cd client && npm install --legacy-peer-deps
+Build Command: (leave empty - configured in vercel.json)
+Output Directory: (leave empty - configured in vercel.json)
+Install Command: (leave empty - configured in vercel.json)
 ```
+
+**⚠️ Wichtig:** Lassen Sie alle Build-Felder leer! Die Konfiguration erfolgt über `vercel.json`
 
 ### 4. Environment Variables einrichten
 Gehen Sie zu **Settings → Environment Variables** und fügen Sie hinzu:
