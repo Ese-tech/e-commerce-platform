@@ -54,6 +54,18 @@ const userSchema = new Schema<IUser>({
     type: Boolean,
     default: false,
   },
+  isActive: {
+    type: Boolean,
+    default: true,
+  },
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
+  isBanned: {
+    type: Boolean,
+    default: false,
+  },
 }, { timestamps: true });
 
 const User = model<IUser>('User', userSchema);

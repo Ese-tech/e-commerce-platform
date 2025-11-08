@@ -33,6 +33,9 @@ export interface IUser extends Document {
     theme: 'light' | 'dark' | 'system';
   };
   isAdmin: boolean;
+  isActive: boolean;
+  isVerified: boolean;
+  isBanned: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -96,14 +99,25 @@ export interface IShippingAddress {
   country: string;
 }
 
+export interface IBillingAddress {
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
+
 export interface IOrder extends Document {
   _id: Types.ObjectId;
   user: Types.ObjectId;
   orderNumber: string;
   items: IOrderItem[];
   shippingAddress: IShippingAddress;
+  billingAddress?: IBillingAddress;
   paymentMethod: 'stripe' | 'paypal' | 'credit_card';
   paymentIntentId?: string;
+  paymentStatus: 'pending' | 'processing' | 'completed' | 'failed' | 'refunded';
+  orderStatus: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   subtotal: number;
   tax: number;
   shipping: number;
@@ -112,13 +126,9 @@ export interface IOrder extends Document {
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   trackingNumber?: string;
   estimatedDelivery?: Date;
+  paidAt?: Date;
+  shippedAt?: Date;
+  deliveredAt?: Date;
   createdAt: Date;
   updatedAt: Date;
-}
-
-export interface AuthenticatedRequest extends Request {
-  user?: {
-    userId: string;
-    isAdmin: boolean;
-  };
 }

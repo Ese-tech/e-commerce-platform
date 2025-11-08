@@ -77,10 +77,10 @@ export const cartAPI = {
 // Orders API
 export const ordersAPI = {
   getOrders: () =>
-    api.get<ApiResponse<Order[]>>('/orders'),
+    api.get<{ orders: Order[]; pagination: any }>('/orders'),
   
   getOrder: (id: string) =>
-    api.get<ApiResponse<Order>>(`/orders/${id}`),
+    api.get<Order>(`/orders/${id}`),
   
   createOrder: (orderData: {
     shippingAddress: {
@@ -93,13 +93,17 @@ export const ordersAPI = {
     paymentMethod: string;
     currency?: string;
   }) =>
-    api.post<ApiResponse<Order>>('/orders/test-create', orderData),
+    api.post<Order>('/orders/create', orderData),
   
-  updateOrderStatus: (id: string, status: string) =>
-    api.put<ApiResponse<Order>>(`/orders/${id}/status`, { status }),
+  updateOrderStatus: (id: string, data: { status: string; trackingNumber?: string; estimatedDelivery?: string }) =>
+    api.put<Order>(`/orders/${id}/status`, data),
   
   cancelOrder: (id: string) =>
-    api.put<ApiResponse<Order>>(`/orders/${id}/cancel`),
+    api.put<Order>(`/orders/${id}/cancel`),
+    
+  // Admin routes
+  getAllOrders: (params?: { page?: number; limit?: number; status?: string }) =>
+    api.get<{ orders: Order[]; pagination: any }>('/orders/admin/all', { params }),
 };
 
 // Users API (for wishlist and profile management)

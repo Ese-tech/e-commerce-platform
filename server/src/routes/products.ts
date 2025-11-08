@@ -13,7 +13,12 @@ router.get('/', async (req: express.Request, res: Response): Promise<void> => {
     const skip = (page - 1) * limit;
     
     // Build query object
-    let query: any = { isActive: true };
+    let query: any = {};
+    
+    // For admin requests, show all products; for regular users, only active products
+    if (!req.query.admin || req.query.admin !== 'true') {
+      query.isActive = true;
+    }
     
     // Search functionality
     if (req.query.search) {

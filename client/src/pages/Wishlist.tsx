@@ -152,21 +152,27 @@ const Wishlist = () => {
             <div className="flex border border-gray-300 dark:border-gray-600 rounded">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 ${
+                className={`p-2 transition-all duration-300 ${
                   viewMode === 'grid'
-                    ? 'bg-blue-600 text-white'
+                    ? 'text-white'
                     : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300'
                 }`}
+                style={{
+                  background: viewMode === 'grid' ? 'var(--gradient-gold)' : undefined
+                }}
               >
                 <Grid className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 ${
+                className={`p-2 transition-all duration-300 ${
                   viewMode === 'list'
-                    ? 'bg-blue-600 text-white'
+                    ? 'text-white'
                     : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300'
                 }`}
+                style={{
+                  background: viewMode === 'list' ? 'var(--gradient-gold)' : undefined
+                }}
               >
                 <List className="w-4 h-4" />
               </button>
@@ -187,7 +193,7 @@ const Wishlist = () => {
           </p>
           <Link
             to="/products"
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            className="btn-primary inline-flex items-center"
           >
             Browse Products
           </Link>

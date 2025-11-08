@@ -5,7 +5,6 @@ import {
   TrendingUp, 
   Users, 
   ArrowRight,
-  Zap,
   Shield,
   Truck
 } from 'lucide-react';
@@ -14,18 +13,18 @@ const Home = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-700 text-white">
+      <section className="text-white" style={{ background: 'var(--gradient-gold)' }}>
         <div className="container mx-auto px-4 py-20">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
               Welcome to ShopHub
             </h1>
-            <p className="text-xl md:text-2xl mb-8 text-blue-100">
+            <p className="text-xl md:text-2xl mb-8" style={{ color: 'var(--color-nude-light)' }}>
               Discover amazing products at unbeatable prices. Your one-stop shop for everything you need.
             </p>
             <Link
               to="/products"
-              className="inline-flex items-center px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors text-lg"
+              className="btn-secondary inline-flex items-center text-lg font-semibold"
             >
               Start Shopping
               <ArrowRight className="ml-2 w-5 h-5" />
@@ -48,8 +47,8 @@ const Home = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center p-6 bg-white dark:bg-gray-900 rounded-lg shadow-md">
-              <div className="bg-blue-100 dark:bg-blue-900 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Truck className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--gradient-silk)' }}>
+                <Truck className="w-8 h-8" style={{ color: 'var(--text-on-silk)' }} />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 Fast Shipping
@@ -60,8 +59,8 @@ const Home = () => {
             </div>
             
             <div className="text-center p-6 bg-white dark:bg-gray-900 rounded-lg shadow-md">
-              <div className="bg-green-100 dark:bg-green-900 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-8 h-8 text-green-600 dark:text-green-400" />
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--gradient-silk)' }}>
+                <Shield className="w-8 h-8" style={{ color: 'var(--text-on-silk)' }} />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 Secure Shopping
@@ -72,8 +71,8 @@ const Home = () => {
             </div>
             
             <div className="text-center p-6 bg-white dark:bg-gray-900 rounded-lg shadow-md">
-              <div className="bg-purple-100 dark:bg-purple-900 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Star className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--gradient-gold)' }}>
+                <Star className="w-8 h-8" style={{ color: 'var(--text-on-gold)' }} />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 Quality Products
@@ -92,7 +91,7 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
             <div>
               <div className="flex items-center justify-center mb-2">
-                <ShoppingBag className="w-8 h-8 text-blue-600 dark:text-blue-400 mr-2" />
+                <ShoppingBag className="w-8 h-8 mr-2" style={{ color: 'var(--color-gold-dark)' }} />
                 <span className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
                   10K+
                 </span>
@@ -102,7 +101,7 @@ const Home = () => {
             
             <div>
               <div className="flex items-center justify-center mb-2">
-                <Users className="w-8 h-8 text-green-600 dark:text-green-400 mr-2" />
+                <Users className="w-8 h-8 mr-2" style={{ color: 'var(--color-silk-green-dark)' }} />
                 <span className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
                   50K+
                 </span>
@@ -112,7 +111,7 @@ const Home = () => {
             
             <div>
               <div className="flex items-center justify-center mb-2">
-                <Star className="w-8 h-8 text-yellow-600 dark:text-yellow-400 mr-2" />
+                <Star className="w-8 h-8 mr-2" style={{ color: 'var(--color-gold-base)' }} />
                 <span className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
                   4.9
                 </span>
@@ -122,7 +121,7 @@ const Home = () => {
             
             <div>
               <div className="flex items-center justify-center mb-2">
-                <TrendingUp className="w-8 h-8 text-purple-600 dark:text-purple-400 mr-2" />
+                <TrendingUp className="w-8 h-8 mr-2" style={{ color: 'var(--color-silk-green-base)' }} />
                 <span className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
                   99%
                 </span>
@@ -162,7 +161,17 @@ const Home = () => {
                 className="group p-6 bg-white dark:bg-gray-900 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 text-center"
               >
                 <div className="text-4xl mb-3">{category.icon}</div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white transition-all duration-300" 
+                    style={{ 
+                      '--hover-color': 'var(--color-gold-dark)',
+                    } as React.CSSProperties}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = 'var(--color-gold-dark)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = '';
+                    }}
+                >
                   {category.name}
                 </h3>
               </Link>
@@ -172,29 +181,30 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-blue-600 dark:bg-blue-700">
+            {/* CTA Section */}
+      <section className="py-16" style={{ background: 'var(--gradient-silk)' }}>
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: 'var(--text-on-silk)' }}>
               Ready to Start Shopping?
             </h2>
-            <p className="text-xl text-blue-100 mb-8">
-              Join thousands of satisfied customers and discover your new favorite products today.
+            <p className="text-xl mb-8" style={{ color: 'var(--text-on-silk)', opacity: '0.9' }}>
+              Join thousands of satisfied customers and discover your next favorite product today.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/products"
-                className="inline-flex items-center px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors"
+                className="btn-secondary inline-flex items-center font-semibold"
               >
-                <ShoppingBag className="mr-2 w-5 h-5" />
                 Browse Products
+                <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
               <Link
                 to="/register"
-                className="inline-flex items-center px-8 py-4 bg-blue-700 text-white font-semibold rounded-lg hover:bg-blue-800 transition-colors border border-blue-400"
+                className="btn-primary inline-flex items-center font-semibold"
               >
-                <Zap className="mr-2 w-5 h-5" />
                 Create Account
+                <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
             </div>
           </div>

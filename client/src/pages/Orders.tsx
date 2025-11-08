@@ -22,7 +22,7 @@ const Orders = () => {
     try {
       setLoading(true);
       const response = await ordersAPI.getOrders();
-      setOrders(response.data.data || []);
+      setOrders(response.data.orders || []);
     } catch (error: any) {
       console.error('Error fetching orders:', error);
       if (error.response?.status !== 401) {
@@ -38,11 +38,11 @@ const Orders = () => {
       case 'pending':
         return <Package className="w-5 h-5 text-yellow-500" />;
       case 'processing':
-        return <Package className="w-5 h-5 text-blue-500" />;
+        return <Package className="w-5 h-5 text-silk-green-600" />;
       case 'shipped':
-        return <Truck className="w-5 h-5 text-purple-500" />;
+        return <Truck className="w-5 h-5 text-gold-600" />;
       case 'delivered':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
+        return <CheckCircle className="w-5 h-5 text-silk-green-700" />;
       case 'cancelled':
         return <XCircle className="w-5 h-5 text-red-500" />;
       default:
@@ -55,11 +55,11 @@ const Orders = () => {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
       case 'processing':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+        return 'bg-silk-green-100 text-silk-green-800 dark:bg-silk-green-900 dark:text-silk-green-300';
       case 'shipped':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+        return 'bg-gold-100 text-gold-800 dark:bg-gold-900 dark:text-gold-300';
       case 'delivered':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+        return 'bg-silk-green-200 text-silk-green-900 dark:bg-silk-green-800 dark:text-silk-green-200';
       case 'cancelled':
         return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
       default:
@@ -123,7 +123,7 @@ const Orders = () => {
           </h2>
           <Link
             to="/login"
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            className="btn-primary"
           >
             Log In
           </Link>
@@ -148,7 +148,7 @@ const Orders = () => {
           </p>
           <Link
             to="/products"
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center space-x-2"
+            className="btn-primary inline-flex items-center space-x-2"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Start Shopping</span>
@@ -240,7 +240,7 @@ const Orders = () => {
               )}
               <Link
                 to={`/orders/${order._id}`}
-                className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
+                className="text-gold-600 hover:text-gold-700 text-sm font-medium transition-colors"
               >
                 View Details
               </Link>

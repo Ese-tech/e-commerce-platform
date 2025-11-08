@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   ShoppingCart, 
@@ -15,18 +15,26 @@ import {
 import { useAuthStore } from '../../store/authStore';
 import { useCartStore } from '../../store/cartStore';
 import { useThemeStore } from '../../store/themeStore';
+import { useSettingsStore } from '../../store/settingsStore';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
   
   const { user, isAuthenticated, logout } = useAuthStore();
   const { getItemCount } = useCartStore();
   const { theme, toggleTheme } = useThemeStore();
+  const { settings } = useSettingsStore();
 
   const cartItemsCount = getItemCount();
+
+  // Fetch settings when component mounts
+  useEffect(() => {
+    useSettingsStore.getState().fetchSettings();
+  }, []);
+
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     await logout();
@@ -39,15 +47,26 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-gradient-to-r from-nude-50 via-white to-nude-50 dark:from-dark-900 dark:via-dark-800 dark:to-dark-900 shadow-lg border-b border-gold-200 dark:border-dark-700">
+    <header className="sticky top-0 z-50 shadow-lg border-b transition-all duration-300" 
+            style={{ 
+              background: 'var(--gradient-nude)',
+              borderColor: 'var(--color-gold-dark)',
+              borderWidth: '2px'
+            }}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link 
             to="/" 
-            className="text-2xl font-bold bg-gradient-to-r from-gold-500 to-gold-600 bg-clip-text text-transparent hover:from-gold-600 hover:to-gold-700 transition-all duration-300 hover:scale-105"
+            className="text-2xl font-bold transition-all duration-300 hover:scale-105"
+            style={{ 
+              background: 'var(--gradient-gold)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}
           >
-            ShopHub
+            {settings?.general?.storeName || 'ShopHub'}
           </Link>
 
           {/* Search Bar - Hidden on mobile */}
@@ -56,7 +75,7 @@ const Header = () => {
               <input
                 type="text"
                 placeholder="Search products..."
-                className="w-full pl-10 pr-4 py-2 border border-nude-300 dark:border-dark-600 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500 bg-nude-50 dark:bg-dark-800 text-dark-900 dark:text-nude-100 placeholder-dark-600 dark:placeholder-nude-400"
+                className="input-field w-full pl-10 pr-4 py-2"
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
                     const value = (e.target as HTMLInputElement).value;
@@ -89,11 +108,19 @@ const Header = () => {
             <nav className="hidden md:flex items-center space-x-4">
               <Link
                 to="/products"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
                   isActivePage('/products')
-                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                    : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
+                  ? 'text-white' 
+                  : 'text-gray-700 dark:text-gray-300'
                 }`}
+                style={{
+                  background: isActivePage('/products') 
+                    ? 'var(--gradient-gold)' 
+                    : 'transparent',
+                  color: isActivePage('/products') 
+                    ? 'var(--text-on-gold)' 
+                    : undefined
+                }}
               >
                 Products
               </Link>
@@ -102,9 +129,17 @@ const Header = () => {
                 <>
                   <Link
                     to="/wishlist"
-                    className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
-                      isActivePage('/wishlist') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'
+                    className={`p-2 rounded-lg transition-all duration-300 ${
+                      isActivePage('/wishlist') ? '' : 'hover:bg-gray-100 dark:hover:bg-gray-800'
                     }`}
+                    style={{
+                      background: isActivePage('/wishlist') 
+                        ? 'var(--gradient-silk)' 
+                        : 'transparent',
+                      color: isActivePage('/wishlist') 
+                        ? 'var(--text-on-silk)' 
+                        : 'var(--color-nude-darker)'
+                    }}
                     aria-label="Wishlist"
                   >
                     <Heart className="w-5 h-5" />
@@ -112,9 +147,17 @@ const Header = () => {
                   
                   <Link
                     to="/orders"
-                    className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
-                      isActivePage('/orders') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'
+                    className={`p-2 rounded-lg transition-all duration-300 ${
+                      isActivePage('/orders') ? '' : 'hover:bg-gray-100 dark:hover:bg-gray-800'
                     }`}
+                    style={{
+                      background: isActivePage('/orders') 
+                        ? 'var(--gradient-silk)' 
+                        : 'transparent',
+                      color: isActivePage('/orders') 
+                        ? 'var(--text-on-silk)' 
+                        : 'var(--color-nude-darker)'
+                    }}
                     aria-label="Orders"
                   >
                     <Package className="w-5 h-5" />
@@ -126,12 +169,25 @@ const Header = () => {
             {/* Cart */}
             <Link
               to="/cart"
-              className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className={`relative p-2 rounded-lg transition-all duration-300 ${
+                isActivePage('/cart') ? '' : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+              }`}
+              style={{
+                background: isActivePage('/cart') 
+                  ? 'var(--gradient-gold)' 
+                  : 'transparent',
+                color: isActivePage('/cart') 
+                  ? 'var(--text-on-gold)' 
+                  : 'var(--color-nude-darker)'
+              }}
               aria-label="Shopping cart"
             >
-              <ShoppingCart className={`w-5 h-5 ${isActivePage('/cart') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'}`} />
+              <ShoppingCart className="w-5 h-5" />
               {cartItemsCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span 
+                  className="absolute -top-1 -right-1 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
+                  style={{ background: 'var(--gradient-silk)' }}
+                >
                   {cartItemsCount > 99 ? '99+' : cartItemsCount}
                 </span>
               )}
@@ -184,7 +240,11 @@ const Header = () => {
                     {user?.isAdmin && (
                       <Link
                         to="/admin"
-                        className="flex items-center space-x-2 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900"
+                        className="flex items-center space-x-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300"
+                        style={{
+                          color: 'var(--color-gold-dark)',
+                          fontWeight: '600'
+                        }}
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <Package className="w-4 h-4" />
@@ -205,13 +265,14 @@ const Header = () => {
               <div className="hidden md:flex items-center space-x-2">
                 <Link
                   to="/login"
-                  className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                  className="px-3 py-2 text-sm transition-all duration-300 hover:text-opacity-80"
+                  style={{ color: 'var(--color-nude-darker)' }}
                 >
                   Login
                 </Link>
                 <Link
                   to="/register"
-                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+                  className="btn-primary text-sm"
                 >
                   Sign Up
                 </Link>
@@ -242,7 +303,7 @@ const Header = () => {
                 <input
                   type="text"
                   placeholder="Search products..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  className="input-field w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       const value = (e.target as HTMLInputElement).value;
@@ -261,7 +322,10 @@ const Header = () => {
             <nav className="space-y-2">
               <Link
                 to="/products"
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                style={{ 
+                  color: 'var(--color-nude-darker)',
+                }}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Products
@@ -271,14 +335,17 @@ const Header = () => {
                 <>
                   <Link
                     to="/login"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    className="block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    style={{ 
+                      color: 'var(--color-nude-darker)',
+                    }}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Login
                   </Link>
                   <Link
                     to="/register"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-white bg-blue-600 hover:bg-blue-700"
+                    className="btn-primary block text-center text-base font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Sign Up
@@ -288,21 +355,30 @@ const Header = () => {
                 <>
                   <Link
                     to="/profile"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    className="block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    style={{ 
+                      color: 'var(--color-nude-darker)',
+                    }}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Profile
                   </Link>
                   <Link
                     to="/orders"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    className="block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    style={{ 
+                      color: 'var(--color-nude-darker)',
+                    }}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Orders
                   </Link>
                   <Link
                     to="/wishlist"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    className="block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    style={{ 
+                      color: 'var(--color-nude-darker)',
+                    }}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Wishlist
@@ -312,7 +388,10 @@ const Header = () => {
                       handleLogout();
                       setIsMenuOpen(false);
                     }}
-                    className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center space-x-2"
+                    className="w-full text-left px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center space-x-2"
+                    style={{ 
+                      color: 'var(--color-nude-darker)',
+                    }}
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Logout</span>

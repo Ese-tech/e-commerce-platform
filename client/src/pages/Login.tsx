@@ -19,7 +19,14 @@ const Login = () => {
   const onSubmit = async (data: LoginForm) => {
     try {
       await login(data.email, data.password);
-      navigate('/');
+      // Get the updated user from the store
+      const { user } = useAuthStore.getState();
+      // Check if user is admin and redirect appropriately
+      if (user?.isAdmin) {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (error) {
       // Error is handled in the store
     }
@@ -36,7 +43,8 @@ const Login = () => {
             Or{' '}
             <Link
               to="/register"
-              className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+              className="font-medium transition-all duration-300 hover:text-opacity-80"
+              style={{ color: 'var(--color-gold-dark)' }}
             >
               create a new account
             </Link>

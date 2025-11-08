@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
 import { 
   Facebook, 
   Twitter, 
@@ -12,53 +13,61 @@ import {
   Shield,
   RotateCcw
 } from 'lucide-react';
+import { useSettingsStore } from '../../store/settingsStore';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const { settings } = useSettingsStore();
+
+  useEffect(() => {
+    useSettingsStore.getState().fetchSettings();
+  }, []);
 
   return (
-    <footer className="bg-gray-900 dark:bg-black text-white">
+    <footer style={{ background: 'var(--gradient-nude)' }} className="text-gray-800 dark:text-gray-200">
       {/* Features Section */}
-      <div className="border-b border-gray-800">
+      <div className="border-b" style={{ borderColor: 'var(--color-gold-dark)' }}>
         <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="flex items-center space-x-3">
-              <div className="bg-blue-600 p-3 rounded-lg">
-                <Truck className="w-6 h-6" />
+              <div className="p-3 rounded-lg" style={{ background: 'var(--gradient-gold)' }}>
+                <Truck className="w-6 h-6" style={{ color: 'var(--text-on-gold)' }} />
               </div>
               <div>
-                <h3 className="font-semibold">Free Shipping</h3>
-                <p className="text-sm text-gray-400">On orders over $50</p>
+                <h3 className="font-semibold" style={{ color: 'var(--text-on-nude)' }}>Free Shipping</h3>
+                <p className="text-sm opacity-75">
+                  On orders over {settings?.general?.currency} {settings?.shipping?.freeShippingThreshold || 50}
+                </p>
               </div>
             </div>
             
             <div className="flex items-center space-x-3">
-              <div className="bg-green-600 p-3 rounded-lg">
-                <CreditCard className="w-6 h-6" />
+              <div className="p-3 rounded-lg" style={{ background: 'var(--gradient-silk)' }}>
+                <CreditCard className="w-6 h-6" style={{ color: 'var(--text-on-silk)' }} />
               </div>
               <div>
-                <h3 className="font-semibold">Secure Payment</h3>
-                <p className="text-sm text-gray-400">100% secure checkout</p>
+                <h3 className="font-semibold" style={{ color: 'var(--text-on-nude)' }}>Secure Payment</h3>
+                <p className="text-sm opacity-75">100% secure checkout</p>
               </div>
             </div>
             
             <div className="flex items-center space-x-3">
-              <div className="bg-purple-600 p-3 rounded-lg">
-                <RotateCcw className="w-6 h-6" />
+              <div className="p-3 rounded-lg" style={{ background: 'var(--gradient-gold)' }}>
+                <RotateCcw className="w-6 h-6" style={{ color: 'var(--text-on-gold)' }} />
               </div>
               <div>
-                <h3 className="font-semibold">Easy Returns</h3>
-                <p className="text-sm text-gray-400">30-day return policy</p>
+                <h3 className="font-semibold" style={{ color: 'var(--text-on-nude)' }}>Easy Returns</h3>
+                <p className="text-sm opacity-75">{settings?.shipping?.returnPolicy || '30-day return policy'}</p>
               </div>
             </div>
             
             <div className="flex items-center space-x-3">
-              <div className="bg-orange-600 p-3 rounded-lg">
-                <Shield className="w-6 h-6" />
+              <div className="p-3 rounded-lg" style={{ background: 'var(--gradient-silk)' }}>
+                <Shield className="w-6 h-6" style={{ color: 'var(--text-on-silk)' }} />
               </div>
               <div>
-                <h3 className="font-semibold">Quality Guarantee</h3>
-                <p className="text-sm text-gray-400">Satisfaction guaranteed</p>
+                <h3 className="font-semibold" style={{ color: 'var(--text-on-nude)' }}>Quality Guarantee</h3>
+                <p className="text-sm opacity-75">Satisfaction guaranteed</p>
               </div>
             </div>
           </div>
@@ -70,36 +79,52 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
           <div>
-            <h3 className="text-2xl font-bold text-blue-400 mb-4">ShopHub</h3>
-            <p className="text-gray-400 mb-4">
-              Your one-stop destination for all your shopping needs. 
-              Quality products, great prices, and exceptional service.
+            <h3 className="text-2xl font-bold mb-4" style={{ 
+              background: 'var(--gradient-gold)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}>{settings?.general?.storeName || 'ShopHub'}</h3>
+            <p className="opacity-75 mb-4">
+              {settings?.general?.storeDescription || 'Your one-stop destination for all your shopping needs. Quality products, great prices, and exceptional service.'}
             </p>
             <div className="flex space-x-4">
               <a 
                 href="#" 
-                className="text-gray-400 hover:text-blue-400 transition-colors"
+                className="opacity-60 transition-all duration-300"
+                style={{ color: 'var(--color-gold-dark)' }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
                 aria-label="Facebook"
               >
                 <Facebook className="w-5 h-5" />
               </a>
               <a 
                 href="#" 
-                className="text-gray-400 hover:text-blue-400 transition-colors"
+                className="opacity-60 transition-all duration-300"
+                style={{ color: 'var(--color-gold-dark)' }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
                 aria-label="Twitter"
               >
                 <Twitter className="w-5 h-5" />
               </a>
               <a 
                 href="#" 
-                className="text-gray-400 hover:text-blue-400 transition-colors"
+                className="opacity-60 transition-all duration-300"
+                style={{ color: 'var(--color-gold-dark)' }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
                 aria-label="Instagram"
               >
                 <Instagram className="w-5 h-5" />
               </a>
               <a 
                 href="#" 
-                className="text-gray-400 hover:text-blue-400 transition-colors"
+                className="opacity-60 transition-all duration-300"
+                style={{ color: 'var(--color-gold-dark)' }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
                 aria-label="YouTube"
               >
                 <Youtube className="w-5 h-5" />
@@ -109,12 +134,13 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
+            <h4 className="text-lg font-semibold mb-4" style={{ color: 'var(--color-gold-dark)' }}>Quick Links</h4>
             <ul className="space-y-2">
               <li>
                 <Link 
                   to="/products" 
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="opacity-75 hover:opacity-100 transition-all duration-300"
+                  style={{ color: 'var(--text-on-nude)' }}
                 >
                   All Products
                 </Link>
@@ -122,7 +148,8 @@ const Footer = () => {
               <li>
                 <Link 
                   to="/products?category=electronics" 
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="opacity-75 hover:opacity-100 transition-all duration-300"
+                  style={{ color: 'var(--text-on-nude)' }}
                 >
                   Electronics
                 </Link>
@@ -130,7 +157,8 @@ const Footer = () => {
               <li>
                 <Link 
                   to="/products?category=clothing" 
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="opacity-75 hover:opacity-100 transition-all duration-300"
+                  style={{ color: 'var(--text-on-nude)' }}
                 >
                   Clothing
                 </Link>
@@ -138,7 +166,8 @@ const Footer = () => {
               <li>
                 <Link 
                   to="/products?category=books" 
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="opacity-75 hover:opacity-100 transition-all duration-300"
+                  style={{ color: 'var(--text-on-nude)' }}
                 >
                   Books
                 </Link>
@@ -146,7 +175,8 @@ const Footer = () => {
               <li>
                 <Link 
                   to="/products?category=home" 
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="opacity-75 hover:opacity-100 transition-all duration-300"
+                  style={{ color: 'var(--text-on-nude)' }}
                 >
                   Home & Garden
                 </Link>
@@ -156,12 +186,13 @@ const Footer = () => {
 
           {/* Customer Service */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Customer Service</h4>
+            <h4 className="text-lg font-semibold mb-4" style={{ color: 'var(--color-gold-dark)' }}>Customer Service</h4>
             <ul className="space-y-2">
               <li>
                 <a 
                   href="#" 
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="opacity-75 hover:opacity-100 transition-all duration-300"
+                  style={{ color: 'var(--text-on-nude)' }}
                 >
                   Contact Us
                 </a>
@@ -169,7 +200,8 @@ const Footer = () => {
               <li>
                 <a 
                   href="#" 
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="opacity-75 hover:opacity-100 transition-all duration-300"
+                  style={{ color: 'var(--text-on-nude)' }}
                 >
                   FAQ
                 </a>
@@ -177,7 +209,8 @@ const Footer = () => {
               <li>
                 <a 
                   href="#" 
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="opacity-75 hover:opacity-100 transition-all duration-300"
+                  style={{ color: 'var(--text-on-nude)' }}
                 >
                   Shipping Info
                 </a>
@@ -185,7 +218,8 @@ const Footer = () => {
               <li>
                 <a 
                   href="#" 
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="opacity-75 hover:opacity-100 transition-all duration-300"
+                  style={{ color: 'var(--text-on-nude)' }}
                 >
                   Returns & Exchanges
                 </a>
@@ -193,7 +227,8 @@ const Footer = () => {
               <li>
                 <a 
                   href="#" 
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="opacity-75 hover:opacity-100 transition-all duration-300"
+                  style={{ color: 'var(--text-on-nude)' }}
                 >
                   Size Guide
                 </a>
@@ -203,53 +238,55 @@ const Footer = () => {
 
           {/* Contact Info */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Contact Info</h4>
+            <h4 className="text-lg font-semibold mb-4" style={{ color: 'var(--color-gold-dark)' }}>Contact Info</h4>
             <div className="space-y-3">
               <div className="flex items-start space-x-3">
-                <MapPin className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                <MapPin className="w-5 h-5 mt-0.5 flex-shrink-0 opacity-75" style={{ color: 'var(--color-gold-base)' }} />
                 <div>
-                  <p className="text-gray-400">
-                    123 Shopping Street<br />
-                    Commerce City, CC 12345<br />
-                    United States
+                  <p className="opacity-75" style={{ color: 'var(--text-on-nude)' }}>
+                    {settings?.general?.address?.street || 'Musterstraße 123'}<br />
+                    {settings?.general?.address?.zipCode || '12345'} {settings?.general?.address?.city || 'Musterstadt'}<br />
+                    {settings?.general?.address?.country || 'Deutschland'}
                   </p>
                 </div>
               </div>
               
               <div className="flex items-center space-x-3">
-                <Phone className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                <Phone className="w-5 h-5 flex-shrink-0 opacity-75" style={{ color: 'var(--color-gold-base)' }} />
                 <a 
-                  href="tel:+1234567890" 
-                  className="text-gray-400 hover:text-white transition-colors"
+                  href={`tel:${settings?.general?.phone || '+49123456789'}`}
+                  className="opacity-75 hover:opacity-100 transition-all duration-300"
+                  style={{ color: 'var(--text-on-nude)' }}
                 >
-                  +1 (234) 567-890
+                  {settings?.general?.phone || '+49 (0) 123 456789'}
                 </a>
               </div>
               
               <div className="flex items-center space-x-3">
-                <Mail className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                <Mail className="w-5 h-5 flex-shrink-0 opacity-75" style={{ color: 'var(--color-gold-base)' }} />
                 <a 
-                  href="mailto:support@shophub.com" 
-                  className="text-gray-400 hover:text-white transition-colors"
+                  href={`mailto:${settings?.general?.contactEmail || 'info@ese-tech.de'}`}
+                  className="opacity-75 hover:opacity-100 transition-all duration-300"
+                  style={{ color: 'var(--text-on-nude)' }}
                 >
-                  support@shophub.com
+                  {settings?.general?.contactEmail || 'info@ese-tech.de'}
                 </a>
               </div>
             </div>
 
             {/* Newsletter Signup */}
             <div className="mt-6">
-              <h5 className="font-semibold mb-2">Newsletter</h5>
-              <p className="text-sm text-gray-400 mb-3">
+              <h5 className="font-semibold mb-2" style={{ color: 'var(--color-silk-green-dark)' }}>Newsletter</h5>
+              <p className="text-sm opacity-75 mb-3" style={{ color: 'var(--text-on-nude)' }}>
                 Subscribe to get updates on new products and offers
               </p>
               <div className="flex">
                 <input
                   type="email"
                   placeholder="Your email"
-                  className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-l-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white text-sm"
+                  className="input-field flex-1 text-sm rounded-l-md rounded-r-none"
                 />
-                <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-r-md transition-colors">
+                <button className="btn-primary text-sm rounded-l-none rounded-r-md">
                   Subscribe
                 </button>
               </div>
@@ -259,48 +296,51 @@ const Footer = () => {
       </div>
 
       {/* Bottom Footer */}
-      <div className="border-t border-gray-800">
+      <div className="border-t" style={{ borderColor: 'var(--color-gold-dark)' }}>
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="text-gray-400 text-sm">
-              © {currentYear} ShopHub. All rights reserved.
+            <div className="text-sm opacity-75" style={{ color: 'var(--text-on-nude)' }}>
+              © {currentYear} {settings?.general?.storeName || 'ShopHub'} by Ese-tech. All rights reserved.
             </div>
             
             <div className="flex items-center space-x-6">
-              <a 
-                href="#" 
-                className="text-gray-400 hover:text-white text-sm transition-colors"
+              <Link 
+                to="/impressum"
+                className="text-sm transition-all duration-300 opacity-75 hover:opacity-100"
+                style={{ color: 'var(--color-gold-dark)' }}
               >
-                Privacy Policy
-              </a>
-              <a 
-                href="#" 
-                className="text-gray-400 hover:text-white text-sm transition-colors"
+                Impressum
+              </Link>
+              <Link 
+                to="/datenschutz"
+                className="text-sm transition-all duration-300 opacity-75 hover:opacity-100"
+                style={{ color: 'var(--color-gold-dark)' }}
               >
-                Terms of Service
-              </a>
-              <a 
-                href="#" 
-                className="text-gray-400 hover:text-white text-sm transition-colors"
+                Datenschutz
+              </Link>
+              <Link 
+                to="/cookies"
+                className="text-sm transition-all duration-300 opacity-75 hover:opacity-100"
+                style={{ color: 'var(--color-gold-dark)' }}
               >
-                Cookie Policy
-              </a>
+                Cookie-Richtlinie
+              </Link>
             </div>
             
             <div className="flex items-center space-x-2">
-              <span className="text-gray-400 text-sm">We accept:</span>
+              <span className="text-sm opacity-75" style={{ color: 'var(--text-on-nude)' }}>We accept:</span>
               <div className="flex space-x-2">
-                <div className="bg-white rounded px-2 py-1">
-                  <span className="text-xs font-bold text-blue-600">VISA</span>
+                <div className="bg-white rounded px-2 py-1 shadow-sm">
+                  <span className="text-xs font-bold" style={{ color: 'var(--color-gold-dark)' }}>VISA</span>
                 </div>
-                <div className="bg-white rounded px-2 py-1">
-                  <span className="text-xs font-bold text-red-600">MC</span>
+                <div className="bg-white rounded px-2 py-1 shadow-sm">
+                  <span className="text-xs font-bold" style={{ color: 'var(--color-silk-green-dark)' }}>MC</span>
                 </div>
-                <div className="bg-white rounded px-2 py-1">
-                  <span className="text-xs font-bold text-blue-800">AMEX</span>
+                <div className="bg-white rounded px-2 py-1 shadow-sm">
+                  <span className="text-xs font-bold" style={{ color: 'var(--color-gold-dark)' }}>AMEX</span>
                 </div>
-                <div className="bg-white rounded px-2 py-1">
-                  <span className="text-xs font-bold text-orange-600">PayPal</span>
+                <div className="bg-white rounded px-2 py-1 shadow-sm">
+                  <span className="text-xs font-bold" style={{ color: 'var(--color-silk-green-dark)' }}>PayPal</span>
                 </div>
               </div>
             </div>

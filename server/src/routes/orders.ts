@@ -62,21 +62,97 @@ router.get('/:id', protect, async (req: AuthenticatedRequest, res: Response): Pr
 
 // Create order from cart
 router.post('/create', protect, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  console.log('=== ORDER ENDPOINT HIT ===');
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+  console.log('User from middleware:', req.user);
+  
   try {
-    const { shippingAddress, paymentMethod, currency = 'USD' } = req.body;
+    console.log('=== ORDER CREATION DEBUG ===');
+    console.log('User:', req.user!.userId);
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
     
-    const cart = await Cart.findOne({ user: req.user!.userId })
+    const { shippingAddress, paymentMethod, currency = 'USD', items } = req.body;
+    
+    // Validate required fields
+    if (!shippingAddress || !paymentMethod) {
+      console.log('Missing required fields');
+      res.status(400).json({ message: 'Missing required fields: shippingAddress and paymentMethod' });
+      return;
+    }
+    
+    // Validate shipping address structure
+    if (!shippingAddress.street || !shippingAddress.city || !shippingAddress.state || 
+        !shippingAddress.zipCode || !shippingAddress.country) {
+      console.log('Invalid shipping address structure:', shippingAddress);
+      res.status(400).json({ message: 'Invalid shipping address. All fields are required.' });
+      return;
+    }
+    
+    console.log('Looking for existing cart...');
+    let cart = await Cart.findOne({ user: req.user!.userId })
       .populate('items.product');
     
+    console.log('Found cart:', cart ? `Cart with ${cart.items.length} items` : 'No cart found');
+    
+    // If no cart exists or cart is empty, but we have items from frontend
+    if ((!cart || cart.items.length === 0) && items && items.length > 0) {
+      console.log('Creating cart from frontend items...');
+      
+      if (!cart) {
+        cart = new Cart({ user: req.user!.userId, items: [] });
+      }
+      
+      // Validate and add items from frontend to backend cart
+      for (const item of items) {
+        console.log('Processing item:', item);
+        const productId = item.product._id || item.product;
+        const product = await Product.findById(productId);
+        
+        if (!product) {
+          console.log('Product not found:', productId);
+          res.status(400).json({ message: `Product not found: ${productId}` });
+          return;
+        }
+        
+        if (product.stock < item.quantity) {
+          console.log('Insufficient stock for:', product.name);
+          res.status(400).json({ 
+            message: `Insufficient stock for ${product.name}` 
+          });
+          return;
+        }
+        
+        cart.items.push({
+          product: product._id,
+          quantity: item.quantity,
+          price: product.price
+        });
+      }
+      
+      console.log('Saving cart...');
+      await cart.save();
+      await cart.populate('items.product');
+      console.log('Cart saved successfully');
+    }
+    
     if (!cart || cart.items.length === 0) {
+      console.log('Cart is still empty after processing');
       res.status(400).json({ message: 'Cart is empty' });
       return;
     }
     
+    console.log('Validating stock for cart items...');
     // Validate stock availability
     for (const item of cart.items) {
       const product = item.product as any;
+      if (!product) {
+        console.log('Product not found in cart item');
+        res.status(400).json({ message: 'Product not found in cart' });
+        return;
+      }
       if (product.stock < item.quantity) {
+        console.log('Insufficient stock during final check:', product.name);
         res.status(400).json({ 
           message: `Insufficient stock for ${product.name}` 
         });
@@ -84,11 +160,14 @@ router.post('/create', protect, async (req: AuthenticatedRequest, res: Response)
       }
     }
     
+    console.log('Calculating totals...');
     // Calculate totals
     const subtotal = cart.totalAmount;
     const tax = subtotal * 0.08; // 8% tax
     const shipping = subtotal > 50 ? 0 : 9.99; // Free shipping over $50
     const total = subtotal + tax + shipping;
+    
+    console.log('Totals:', { subtotal, tax, shipping, total });
     
     // Create order items with product snapshots
     const orderItems = cart.items.map(item => {
@@ -102,8 +181,15 @@ router.post('/create', protect, async (req: AuthenticatedRequest, res: Response)
       };
     });
     
-    const order = new Order({
+    console.log('Order items:', orderItems);
+    
+    // Generate order number
+    const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+    
+    // Create order
+    const orderData = {
       user: req.user!.userId,
+      orderNumber,
       items: orderItems,
       shippingAddress,
       paymentMethod,
@@ -112,11 +198,19 @@ router.post('/create', protect, async (req: AuthenticatedRequest, res: Response)
       shipping,
       total,
       currency,
-    });
+    };
     
+    console.log('Creating order with data:', JSON.stringify(orderData, null, 2));
+    
+    const order = new Order(orderData);
+    
+    console.log('Saving order...');
     await order.save();
     
+    console.log('Order saved successfully:', order._id);
+    
     // Update product stock
+    console.log('Updating product stock...');
     for (const item of cart.items) {
       const product = item.product as any;
       await Product.findByIdAndUpdate(
@@ -126,11 +220,17 @@ router.post('/create', protect, async (req: AuthenticatedRequest, res: Response)
     }
     
     // Clear cart
+    console.log('Clearing cart...');
     cart.items = [];
     await cart.save();
     
+    console.log('=== ORDER CREATION SUCCESS ===');
     res.status(201).json(order);
   } catch (error) {
+    console.error('=== ORDER CREATION ERROR ===');
+    console.error('Error details:', error);
+    console.error('Error message:', (error as Error).message);
+    console.error('Error stack:', (error as Error).stack);
     res.status(500).json({ message: (error as Error).message });
   }
 });
@@ -192,57 +292,7 @@ router.post('/test-create', async (req: express.Request, res: Response): Promise
   }
 });
 
-// Update order status (admin only)
-router.put('/:id/status', protect, admin, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const { status, trackingNumber, estimatedDelivery } = req.body;
-    
-    const order = await Order.findById(req.params.id);
-    if (!order) {
-      res.status(404).json({ message: 'Order not found' });
-      return;
-    }
-    
-    order.status = status;
-    if (trackingNumber) order.trackingNumber = trackingNumber;
-    if (estimatedDelivery) order.estimatedDelivery = new Date(estimatedDelivery);
-    
-    await order.save();
-    
-    res.json(order);
-  } catch (error) {
-    res.status(500).json({ message: (error as Error).message });
-  }
-});
-
-// Track order
-router.get('/:orderNumber/track', async (req: express.Request, res: Response): Promise<void> => {
-  try {
-    const order = await Order.findOne({ 
-      orderNumber: req.params.orderNumber 
-    }).select('orderNumber status trackingNumber estimatedDelivery createdAt');
-    
-    if (!order) {
-      res.status(404).json({ message: 'Order not found' });
-      return;
-    }
-    
-    const trackingInfo = {
-      orderNumber: order.orderNumber,
-      status: order.status,
-      trackingNumber: order.trackingNumber,
-      estimatedDelivery: order.estimatedDelivery,
-      orderDate: order.createdAt,
-      timeline: getOrderTimeline(order.status),
-    };
-    
-    res.json(trackingInfo);
-  } catch (error) {
-    res.status(500).json({ message: (error as Error).message });
-  }
-});
-
-// Admin: Get all orders
+// Admin routes (must be before the generic routes)
 router.get('/admin/all', protect, admin, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const page = parseInt(req.query.page as string) || 1;
@@ -274,6 +324,123 @@ router.get('/admin/all', protect, admin, async (req: AuthenticatedRequest, res: 
     });
   } catch (error) {
     res.status(500).json({ message: (error as Error).message });
+  }
+});
+
+// Update order status (admin only)
+router.put('/:id/status', protect, admin, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    console.log('=== UPDATE ORDER STATUS ===');
+    console.log('Order ID:', req.params.id);
+    console.log('Request body:', req.body);
+    console.log('User:', req.user);
+    
+    const { status, trackingNumber, estimatedDelivery } = req.body;
+    
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      console.log('Order not found');
+      res.status(404).json({ message: 'Order not found' });
+      return;
+    }
+
+    console.log('Current order status:', order.status);
+    order.status = status;
+    if (trackingNumber) order.trackingNumber = trackingNumber;
+    if (estimatedDelivery) order.estimatedDelivery = new Date(estimatedDelivery);
+    
+    await order.save();
+    console.log('Order updated successfully');
+    
+    res.json(order);
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    res.status(500).json({ message: (error as Error).message });
+  }
+});
+
+// Track order
+router.get('/:orderNumber/track', async (req: express.Request, res: Response): Promise<void> => {
+  try {
+    const order = await Order.findOne({ 
+      orderNumber: req.params.orderNumber 
+    }).select('orderNumber status trackingNumber estimatedDelivery createdAt');
+    
+    if (!order) {
+      res.status(404).json({ message: 'Order not found' });
+      return;
+    }
+    
+    const trackingInfo = {
+      orderNumber: order.orderNumber,
+      status: order.status,
+      trackingNumber: order.trackingNumber,
+      estimatedDelivery: order.estimatedDelivery,
+      orderDate: order.createdAt,
+      timeline: getOrderTimeline(order.status),
+    };
+    
+    res.json(trackingInfo);
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message });
+  }
+});
+
+// Cancel order
+router.put('/:id/cancel', protect, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const orderId = req.params.id;
+    const userId = req.user!.userId;
+
+    // Find the order
+    const order = await Order.findById(orderId);
+    if (!order) {
+      res.status(404).json({ message: 'Order not found' });
+      return;
+    }
+
+    // Check if user owns this order or is admin
+    if (order.user.toString() !== userId && !req.user!.isAdmin) {
+      res.status(403).json({ message: 'Not authorized to cancel this order' });
+      return;
+    }
+
+    // Check if order can be cancelled
+    if (order.status === 'cancelled') {
+      res.status(400).json({ message: 'Order is already cancelled' });
+      return;
+    }
+
+    if (order.status === 'delivered') {
+      res.status(400).json({ message: 'Cannot cancel delivered orders' });
+      return;
+    }
+
+    if (order.status === 'shipped') {
+      res.status(400).json({ message: 'Cannot cancel shipped orders. Please contact support.' });
+      return;
+    }
+
+    // Cancel the order
+    order.status = 'cancelled';
+    await order.save();
+
+    // Restore product stock
+    for (const item of order.items) {
+      await Product.findByIdAndUpdate(
+        item.product,
+        { $inc: { stock: item.quantity } }
+      );
+    }
+
+    res.json({
+      success: true,
+      message: 'Order cancelled successfully',
+      order
+    });
+  } catch (error) {
+    console.error('Error cancelling order:', error);
+    res.status(500).json({ message: 'Failed to cancel order' });
   }
 });
 

@@ -1,0 +1,53 @@
+/* Custom Color Palette */
+:root {
+  /* Gold Theme Colors */
+  --color-gold-light: #ffd700;
+  --color-gold: #daa520;
+  --color-gold-dark: #b8860b;
+  --color-gold-darker: #9a7d0a;
+  
+  /* Silk Green */
+  --color-silk-green-light: #c8e6c9;
+  --color-silk-green: #81c784;
+  --color-silk-green-dark: #66bb6a;
+  --color-silk-green-darker: #4caf50;
+  
+  /* Nude Colors */
+  --color-nude-light: #f5f5dc;
+  --color-nude: #e6ddd4;
+  --color-nude-dark: #d4c5b9;
+  --color-nude-darker: #c2b09c;
+  
+  /* Gradient Combinations */
+  --gradient-gold: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
+  --gradient-silk: linear-gradient(135deg, var(--color-silk-green-light), var(--color-silk-green-dark));
+  --gradient-nude: linear-gradient(135deg, var(--color-nude-light), var(--color-nude-dark));
+  
+  /* Text Colors */
+  --text-on-gold: #2c1810;
+  --text-on-silk: #1b4332;
+  --text-on-nude: #3e2723;
+  
+  /* Shadow Effects */
+  --shadow-gold: 0 4px 20px rgba(218, 165, 32, 0.3);
+  --shadow-silk: 0 4px 20px rgba(129, 199, 132, 0.3);
+  --shadow-nude: 0 4px 20px rgba(212, 197, 185, 0.3);
+}
+
+/* Dark mode adjustments */
+.dark {
+  --color-gold-light: #f4d03f;
+  --color-gold: #f1c40f;
+  --color-gold-dark: #d68910;
+  --color-gold-darker: #b7950b;
+  
+  --color-silk-green-light: #a5d6a7;
+  --color-silk-green: #66bb6a;
+  --color-silk-green-dark: #4caf50;
+  --color-silk-green-darker: #388e3c;
+  
+  --color-nude-light: #efebe9;
+  --color-nude: #d7ccc8;
+  --color-nude-dark: #bcaaa4;
+  --color-nude-darker: #a1887f;
+}

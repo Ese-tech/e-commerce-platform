@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CreditCard, Lock, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { CreditCard, Lock, ArrowLeft } from 'lucide-react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { ordersAPI } from '../services';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
+import { useSettingsStore } from '../store/settingsStore';
 import toast from 'react-hot-toast';
 import { AutocompleteInput } from '../components/ui/AutocompleteInput';
 import { 
@@ -16,11 +19,13 @@ import {
   searchStreets
 } from '../data/addressData';
 import { 
-  currencies, 
   getCurrencyForCountry, 
   formatPrice, 
   getAllCurrencies 
 } from '../data/currencyData';
+
+// Initialize Stripe with test key
+const stripeTestKey = 'pk_test_51QO0QMBS8Ku71THY8bFJw2k1O5z7ZNxCJA5nO7YdxOjNF5fCxpQD1M1uDhb8GHALrK2NM3Yv7dZvBbQK6QNF3kIK00jL7zP8Gi';
 
 interface ShippingAddress {
   street: string;
@@ -30,19 +35,177 @@ interface ShippingAddress {
   country: string;
 }
 
-interface PaymentInfo {
-  cardNumber: string;
-  expiryDate: string;
-  cvv: string;
-  nameOnCard: string;
+interface BillingAddress {
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  sameAsShipping: boolean;
 }
+
+interface OrderData {
+  shippingAddress: ShippingAddress;
+  billingAddress?: BillingAddress;
+  paymentMethod: 'stripe' | 'credit_card' | 'paypal';
+  currency: string;
+  total: number;
+  items: any[];
+}
+
+// Stripe Payment Form Component
+const StripePaymentForm = ({ orderData, onSuccess, onError, loading, setLoading }: {
+  orderData: OrderData;
+  onSuccess: (orderNumber: string) => void;
+  onError: (error: string) => void;
+  loading: boolean;
+  setLoading: (loading: boolean) => void;
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!stripe || !elements) return;
+
+    setLoading(true);
+    setPaymentProcessing(true);
+
+    try {
+      // Step 1: Create payment intent on backend
+      const response = await fetch('/api/payments/create-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          amount: Math.round(orderData.total * 100), // Convert to cents
+          currency: orderData.currency.toLowerCase(),
+          orderData: {
+            shippingAddress: orderData.shippingAddress,
+            billingAddress: orderData.billingAddress,
+            items: orderData.items
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create payment intent');
+      }
+
+      const { client_secret, orderId } = await response.json();
+
+      // Step 2: Confirm payment with Stripe
+      const cardElement = elements.getElement(CardElement);
+      if (!cardElement) throw new Error('Card element not found');
+
+      const { error, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            name: `${orderData.billingAddress?.street || orderData.shippingAddress.street}`,
+            address: {
+              line1: orderData.billingAddress?.street || orderData.shippingAddress.street,
+              city: orderData.billingAddress?.city || orderData.shippingAddress.city,
+              state: orderData.billingAddress?.state || orderData.shippingAddress.state,
+              postal_code: orderData.billingAddress?.zipCode || orderData.shippingAddress.zipCode,
+              country: orderData.billingAddress?.country || orderData.shippingAddress.country,
+            },
+          },
+        },
+      });
+
+      if (error) {
+        onError(error.message || 'Payment failed');
+        return;
+      }
+
+      if (paymentIntent.status === 'succeeded') {
+        // Step 3: Confirm payment on backend
+        await fetch('/api/payments/confirm-payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            payment_intent_id: paymentIntent.id,
+            order_id: orderId
+          })
+        });
+
+        onSuccess(orderId);
+      }
+    } catch (error: any) {
+      onError(error.message || 'Payment failed');
+    } finally {
+      setLoading(false);
+      setPaymentProcessing(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+          Card Information
+        </label>
+        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-300 dark:border-gray-600 rounded-md">
+          <CardElement
+            options={{
+              style: {
+                base: {
+                  fontSize: '16px',
+                  color: '#424770',
+                  '::placeholder': {
+                    color: '#aab7c4',
+                  },
+                },
+                invalid: {
+                  color: '#9e2146',
+                },
+              },
+            }}
+          />
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        disabled={!stripe || loading || paymentProcessing}
+        className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+      >
+        {paymentProcessing ? (
+          <>
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+            <span>Processing Payment...</span>
+          </>
+        ) : (
+          <>
+            <Lock className="w-4 h-4" />
+            <span>Pay {formatPrice(orderData.total, orderData.currency)}</span>
+          </>
+        )}
+      </button>
+    </form>
+  );
+};
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { cart, setCart } = useCartStore();
   const { user, setUser } = useAuthStore();
+  const { settings } = useSettingsStore();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+
+  // Fetch settings on component mount
+  useEffect(() => {
+    useSettingsStore.getState().fetchSettings();
+  }, []);
 
   // Initialize with mock data for testing if no user/cart exists
   useEffect(() => {
@@ -122,6 +285,16 @@ const Checkout = () => {
     country: 'Germany'
   });
 
+  // Billing form
+  const [billingAddress, setBillingAddress] = useState<BillingAddress>({
+    street: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    country: 'Germany',
+    sameAsShipping: true
+  });
+
   // Address autocomplete state
   const [countryOptions] = useState(() => {
     const countries = Object.keys(addressData);
@@ -133,15 +306,7 @@ const Checkout = () => {
   const [streetOptions, setStreetOptions] = useState<string[]>([]);
   const [zipCodeOptions, setZipCodeOptions] = useState<string[]>([]);
   
-  // Payment form
-  const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
-    nameOnCard: ''
-  });
-  
-  const [paymentMethod, setPaymentMethod] = useState<'credit_card' | 'stripe' | 'paypal'>('credit_card');
+  const [paymentMethod, setPaymentMethod] = useState<'credit_card' | 'stripe' | 'paypal'>('stripe');
 
   useEffect(() => {
     if (!user) {
@@ -155,12 +320,6 @@ const Checkout = () => {
     }
     
     // Start with clean form - don't pre-fill address for testing
-    // Comment out pre-fill to start fresh each time
-    // if (user.address) {
-    //   setShippingAddress(user.address);
-    // }
-    
-    // Reset to step 1 and clear form data
     setStep(1);
     setShippingAddress({
       street: '',
@@ -169,13 +328,15 @@ const Checkout = () => {
       zipCode: '',
       country: ''
     });
-    setPaymentInfo({
-      cardNumber: '',
-      expiryDate: '',
-      cvv: '',
-      nameOnCard: ''
+    setBillingAddress({
+      street: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      country: '',
+      sameAsShipping: true
     });
-    setPaymentMethod('credit_card');
+    setPaymentMethod('stripe');
     
     // Clear dropdown options
     setStateOptions([]);
@@ -255,7 +416,15 @@ const Checkout = () => {
   };
 
   const calculateShipping = (subtotal: number) => {
-    return subtotal > 50 ? 0 : 9.99; // Free shipping over $50
+    const freeShippingThreshold = settings?.shipping?.freeShippingThreshold || 50;
+    const domesticRate = settings?.shipping?.domesticShippingRate || 9.99;
+    const internationalRate = settings?.shipping?.internationalShippingRate || 15.99;
+    
+    if (subtotal >= freeShippingThreshold) return 0;
+    
+    // Check if shipping internationally (simplified logic)
+    const isDomestic = shippingAddress.country === 'Germany' || shippingAddress.country === 'Deutschland';
+    return isDomestic ? domesticRate : internationalRate;
   };
 
   const subtotal = calculateSubtotal();
@@ -361,7 +530,20 @@ const Checkout = () => {
     setStep(2);
   };
 
-  const handlePaymentSubmit = async (e: React.FormEvent) => {
+  const handlePaymentSuccess = (orderNumber: string) => {
+    // Clear cart after successful order
+    setCart(null);
+    toast.success('Order placed successfully!');
+    navigate('/order-success', { 
+      state: { orderNumber, shippingAddress, total: formatPrice(total, selectedCurrency) } 
+    });
+  };
+
+  const handlePaymentError = (error: string) => {
+    toast.error(error);
+  };
+
+  const handleTraditionalPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!cart) return;
@@ -369,21 +551,23 @@ const Checkout = () => {
     try {
       setLoading(true);
       
-      // Create order
+      // Create order with cart items to handle frontend/backend sync
       const orderData = {
         shippingAddress,
+        billingAddress: billingAddress.sameAsShipping ? shippingAddress : billingAddress,
         paymentMethod,
-        currency: selectedCurrency
+        currency: selectedCurrency,
+        items: cart.items // Include cart items for sync
       };
       
-      const response = await ordersAPI.createOrder(orderData);
+      await ordersAPI.createOrder(orderData);
       
       // Clear cart after successful order
       setCart(null);
       
       toast.success('Order placed successfully!');
-      navigate(`/orders/${response.data.data?._id || ''}`, { 
-        state: { orderSuccess: true } 
+      navigate('/order-success', { 
+        state: { orderSuccess: true, shippingAddress, total: formatPrice(total, selectedCurrency) } 
       });
       
     } catch (error: any) {
@@ -393,51 +577,6 @@ const Checkout = () => {
       setLoading(false);
     }
   };
-
-  const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const matches = v.match(/\d{4,16}/g);
-    const match = matches && matches[0] || '';
-    const parts = [];
-
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-
-    if (parts.length) {
-      return parts.join(' ');
-    } else {
-      return v;
-    }
-  };
-
-  const formatExpiryDate = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    if (v.length >= 2) {
-      return v.substring(0, 2) + '/' + v.substring(2, 4);
-    }
-    return v;
-  };
-
-  if (!user || !cart) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center py-20">
-          <ShoppingBag className="w-24 h-24 text-gray-300 mx-auto mb-6" />
-          <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-300 mb-4">
-            Your cart is empty
-          </h2>
-          <button
-            onClick={() => navigate('/products')}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center space-x-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Continue Shopping</span>
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -589,154 +728,189 @@ const Checkout = () => {
                   </button>
                 </div>
 
+                {/* Billing Address Section */}
+                <div className="mb-6 p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                    Billing Address
+                  </h3>
+                  
+                  <label className="flex items-center space-x-2 mb-4">
+                    <input
+                      type="checkbox"
+                      checked={billingAddress.sameAsShipping}
+                      onChange={(e) => setBillingAddress(prev => ({ 
+                        ...prev, 
+                        sameAsShipping: e.target.checked,
+                        ...(e.target.checked ? shippingAddress : {})
+                      }))}
+                      className="text-blue-600"
+                    />
+                    <span className="text-gray-900 dark:text-white">Same as shipping address</span>
+                  </label>
+
+                  {!billingAddress.sameAsShipping && (
+                    <div className="space-y-4">
+                      <AutocompleteInput
+                        label="Country"
+                        value={billingAddress.country}
+                        onChange={(value) => setBillingAddress(prev => ({ ...prev, country: value }))}
+                        options={countryOptions.map(country => ({
+                          value: country,
+                          label: country
+                        }))}
+                        placeholder="Select country..."
+                        required
+                      />
+                      
+                      <AutocompleteInput
+                        label="Street Address"
+                        value={billingAddress.street}
+                        onChange={(value) => setBillingAddress(prev => ({ ...prev, street: value }))}
+                        options={[]}
+                        placeholder="Enter street address..."
+                        required
+                      />
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <AutocompleteInput
+                          label="City"
+                          value={billingAddress.city}
+                          onChange={(value) => setBillingAddress(prev => ({ ...prev, city: value }))}
+                          options={[]}
+                          placeholder="Enter city..."
+                          required
+                        />
+                        
+                        <AutocompleteInput
+                          label="ZIP Code"
+                          value={billingAddress.zipCode}
+                          onChange={(value) => setBillingAddress(prev => ({ ...prev, zipCode: value }))}
+                          options={[]}
+                          placeholder="Enter ZIP code..."
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Payment Method Selection */}
                 <div className="mb-6">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
                     Select Payment Method
                   </h3>
                   <div className="space-y-3">
-                    <label className="flex items-center space-x-3 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="credit_card"
-                        checked={paymentMethod === 'credit_card'}
-                        onChange={(e) => setPaymentMethod(e.target.value as any)}
-                        className="text-blue-600"
-                      />
-                      <CreditCard className="w-5 h-5" />
-                      <span className="text-gray-900 dark:text-white">Credit Card</span>
-                    </label>
-                    <label className="flex items-center space-x-3 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="stripe"
-                        checked={paymentMethod === 'stripe'}
-                        onChange={(e) => setPaymentMethod(e.target.value as any)}
-                        className="text-blue-600"
-                      />
-                      <span className="text-gray-900 dark:text-white">Stripe</span>
-                    </label>
-                    <label className="flex items-center space-x-3 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="paypal"
-                        checked={paymentMethod === 'paypal'}
-                        onChange={(e) => setPaymentMethod(e.target.value as any)}
-                        className="text-blue-600"
-                      />
-                      <span className="text-gray-900 dark:text-white">PayPal</span>
-                    </label>
+                    {/* Show Stripe option if enabled */}
+                    {settings?.payment?.enableStripe !== false && (
+                      <label className="flex items-center space-x-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="stripe"
+                          checked={paymentMethod === 'stripe'}
+                          onChange={(e) => setPaymentMethod(e.target.value as any)}
+                          className="text-blue-600"
+                        />
+                        <CreditCard className="w-5 h-5" />
+                        <span className="text-gray-900 dark:text-white">Credit/Debit Card (Stripe)</span>
+                      </label>
+                    )}
+                    
+                    {/* Show Credit Card option if enabled */}
+                    {settings?.payment?.enableCreditCard !== false && (
+                      <label className="flex items-center space-x-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="credit_card"
+                          checked={paymentMethod === 'credit_card'}
+                          onChange={(e) => setPaymentMethod(e.target.value as any)}
+                          className="text-blue-600"
+                        />
+                        <CreditCard className="w-5 h-5" />
+                        <span className="text-gray-900 dark:text-white">Credit Card (Traditional)</span>
+                      </label>
+                    )}
+                    
+                    {/* Show PayPal option if enabled */}
+                    {settings?.payment?.enablePayPal !== false && (
+                      <label className="flex items-center space-x-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="paypal"
+                          checked={paymentMethod === 'paypal'}
+                          onChange={(e) => setPaymentMethod(e.target.value as any)}
+                          className="text-blue-600"
+                        />
+                        <span className="text-gray-900 dark:text-white">PayPal</span>
+                      </label>
+                    )}
                   </div>
                 </div>
                 
-                <form onSubmit={handlePaymentSubmit} className="space-y-4">
-                  {paymentMethod === 'credit_card' && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Name on Card
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={paymentInfo.nameOnCard}
-                          onChange={(e) => setPaymentInfo(prev => ({ ...prev, nameOnCard: e.target.value }))}
-                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                          placeholder="John Doe"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Card Number
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={paymentInfo.cardNumber}
-                          onChange={(e) => setPaymentInfo(prev => ({ ...prev, cardNumber: formatCardNumber(e.target.value) }))}
-                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                          placeholder="1234 5678 9012 3456"
-                          maxLength={19}
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Expiry Date
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={paymentInfo.expiryDate}
-                            onChange={(e) => setPaymentInfo(prev => ({ ...prev, expiryDate: formatExpiryDate(e.target.value) }))}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                            placeholder="MM/YY"
-                            maxLength={5}
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            CVV
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={paymentInfo.cvv}
-                            onChange={(e) => setPaymentInfo(prev => ({ ...prev, cvv: e.target.value.replace(/[^0-9]/g, '') }))}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                            placeholder="123"
-                            maxLength={4}
-                          />
-                        </div>
-                      </div>
-                    </>
-                  )}
+                {/* Payment Forms */}
+                {paymentMethod === 'stripe' && (
+                  <Elements stripe={loadStripe(stripeTestKey)}>
+                    <StripePaymentForm
+                      orderData={{
+                        shippingAddress,
+                        billingAddress: billingAddress.sameAsShipping ? undefined : billingAddress,
+                        paymentMethod: 'stripe',
+                        currency: selectedCurrency,
+                        total,
+                        items: cart?.items || []
+                      }}
+                      onSuccess={handlePaymentSuccess}
+                      onError={handlePaymentError}
+                      loading={loading}
+                      setLoading={setLoading}
+                    />
+                  </Elements>
+                )}
 
-                  {paymentMethod === 'stripe' && (
-                    <div className="text-center py-8">
-                      <div className="bg-gradient-to-r from-purple-500 to-blue-500 text-white p-6 rounded-lg">
-                        <h3 className="text-lg font-semibold mb-2">Stripe Payment</h3>
-                        <p className="mb-4">Secure payment processing with Stripe</p>
-                        <div className="text-sm opacity-90">
-                          Click "Place Order" to proceed with Stripe payment
-                        </div>
-                      </div>
+                {paymentMethod === 'credit_card' && (
+                  <form onSubmit={handleTraditionalPayment} className="space-y-4">
+                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                        Traditional credit card processing (demo mode)
+                      </p>
+                      
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                      >
+                        {loading ? (
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        ) : (
+                          <>
+                            <Lock className="w-4 h-4" />
+                            <span>Place Order - {formatPrice(total, selectedCurrency)}</span>
+                          </>
+                        )}
+                      </button>
                     </div>
-                  )}
+                  </form>
+                )}
 
-                  {paymentMethod === 'paypal' && (
+                {paymentMethod === 'paypal' && (
+                  <form onSubmit={handleTraditionalPayment} className="space-y-4">
                     <div className="text-center py-8">
                       <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 rounded-lg">
                         <h3 className="text-lg font-semibold mb-2">PayPal Payment</h3>
                         <p className="mb-4">Pay securely with your PayPal account</p>
-                        <div className="text-sm opacity-90">
-                          Click "Place Order" to be redirected to PayPal
-                        </div>
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-6 rounded-lg transition-colors disabled:opacity-50"
+                        >
+                          {loading ? 'Processing...' : `Pay ${formatPrice(total, selectedCurrency)} with PayPal`}
+                        </button>
                       </div>
                     </div>
-                  )}
-                  
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                  >
-                    {loading ? (
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    ) : (
-                      <>
-                        <Lock className="w-4 h-4" />
-                        <span>Place Order - {formatPrice(total, selectedCurrency)}</span>
-                      </>
-                    )}
-                  </button>
-                </form>
+                  </form>
+                )}
                 
                 <div className="mt-4 flex items-center justify-center text-sm text-gray-500 dark:text-gray-400">
                   <Lock className="w-4 h-4 mr-1" />
@@ -755,7 +929,7 @@ const Checkout = () => {
               
               {/* Order Items */}
               <div className="space-y-3 mb-6">
-                {cart.items.map((item) => (
+                {cart?.items.map((item) => (
                   <div key={item.product._id} className="flex items-center space-x-3">
                     <img
                       src={item.product.images[0]?.url || '/placeholder.jpg'}

@@ -1,5 +1,5 @@
 import { Schema, model, Document, Types } from 'mongoose';
-import { IOrder, IOrderItem, IShippingAddress } from '../types';
+import { IOrder, IOrderItem, IShippingAddress, IBillingAddress } from '../types';
 
 const orderItemSchema = new Schema<IOrderItem>({
   product: {
@@ -25,6 +25,14 @@ const shippingAddressSchema = new Schema<IShippingAddress>({
   country: { type: String, required: true },
 });
 
+const billingAddressSchema = new Schema<IBillingAddress>({
+  street: { type: String, required: true },
+  city: { type: String, required: true },
+  state: { type: String, required: true },
+  zipCode: { type: String, required: true },
+  country: { type: String, required: true },
+});
+
 const orderSchema = new Schema<IOrder>({
   user: {
     type: Schema.Types.ObjectId,
@@ -38,12 +46,24 @@ const orderSchema = new Schema<IOrder>({
   },
   items: [orderItemSchema],
   shippingAddress: shippingAddressSchema,
+  billingAddress: billingAddressSchema,
   paymentMethod: {
     type: String,
     required: true,
     enum: ['stripe', 'paypal', 'credit_card'],
+    default: 'stripe',
   },
   paymentIntentId: String,
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'processing', 'completed', 'failed', 'refunded'],
+    default: 'pending',
+  },
+  orderStatus: {
+    type: String,
+    enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'],
+    default: 'pending',
+  },
   subtotal: {
     type: Number,
     required: true,
@@ -65,6 +85,7 @@ const orderSchema = new Schema<IOrder>({
     required: true,
     default: 'USD',
   },
+  // Legacy field for backward compatibility
   status: {
     type: String,
     enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
@@ -72,6 +93,9 @@ const orderSchema = new Schema<IOrder>({
   },
   trackingNumber: String,
   estimatedDelivery: Date,
+  paidAt: Date,
+  shippedAt: Date,
+  deliveredAt: Date,
 }, { timestamps: true });
 
 // Generate order number before saving

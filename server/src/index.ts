@@ -9,6 +9,10 @@ import productRoutes from './routes/products';
 import cartRoutes from './routes/cart';
 import orderRoutes from './routes/orders';
 import userRoutes from './routes/users';
+import adminUserRoutes from './routes/adminUsers';
+import analyticsRoutes from './routes/analytics';
+import settingsRoutes from './routes/settings';
+import paymentRoutes from './routes/payments';
 
 dotenv.config();
 
@@ -16,7 +20,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true,
 }));
 app.use(express.json());
@@ -42,6 +46,10 @@ app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/admin/users', adminUserRoutes);
+app.use('/api/admin/analytics', analyticsRoutes);
+app.use('/api/admin/settings', settingsRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

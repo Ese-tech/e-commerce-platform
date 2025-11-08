@@ -44,7 +44,7 @@ const AdminLayout = () => {
           <p className="text-gray-600 mb-4">You don't have permission to access the admin panel.</p>
           <Link 
             to="/" 
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="btn-primary"
           >
             Go to Homepage
           </Link>
@@ -54,7 +54,7 @@ const AdminLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
@@ -67,7 +67,18 @@ const AdminLayout = () => {
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">Admin Panel</h2>
+          <Link 
+            to="/" 
+            className="text-xl font-bold transition-all duration-300 hover:scale-105"
+            style={{ 
+              background: 'var(--gradient-gold)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}
+          >
+            ShopHub Admin
+          </Link>
           <button
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500"
@@ -87,11 +98,14 @@ const AdminLayout = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                     isActive
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'text-white'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
                   }`}
+                  style={{
+                    background: isActive ? 'var(--gradient-gold)' : 'transparent'
+                  }}
                   onClick={() => setSidebarOpen(false)}
                 >
                   <IconComponent className="mr-3 w-5 h-5" />
@@ -113,29 +127,57 @@ const AdminLayout = () => {
         </nav>
       </div>
 
-      {/* Main content */}
-      <div className="lg:ml-64">
-        {/* Top bar */}
-        <div className="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200">
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col">
+        {/* Admin header */}
+        <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
+              <div className="flex items-center">
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500"
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+                <h1 className="text-lg font-semibold text-gray-900 dark:text-white ml-4 lg:ml-0">
+                  Admin Panel
+                </h1>
+              </div>
               
               <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-500">Welcome back,</span>
-                <span className="text-sm font-medium text-gray-900">{user?.name}</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">Welcome back,</span>
+                <div className="flex items-center space-x-2">
+                  {user?.profilePicture?.url ? (
+                    <img
+                      src={user.profilePicture.url}
+                      alt={user.name}
+                      className="w-8 h-8 rounded-full"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--gradient-gold)' }}>
+                      <span className="text-sm font-medium" style={{ color: 'var(--text-on-gold)' }}>
+                        {user?.name?.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">{user?.name}</span>
+                </div>
+                
+                <Link
+                  to="/"
+                  className="btn-secondary text-sm"
+                  title="View Site"
+                >
+                  View Site
+                </Link>
               </div>
             </div>
           </div>
         </div>
 
         {/* Page content */}
-        <main className="p-6">
+        <main className="flex-1 p-6 overflow-auto">
           <Outlet />
         </main>
       </div>

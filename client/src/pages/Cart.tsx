@@ -49,7 +49,7 @@ const Cart = () => {
       }
     } catch (error) {
       console.error('Error updating cart:', error);
-      toast.error('Failed to update cart');
+      toast.error('Failed to update item quantity');
     } finally {
       setLocalLoading(false);
     }
@@ -58,7 +58,7 @@ const Cart = () => {
   const handleRemoveItem = async (productId: string) => {
     try {
       setLocalLoading(true);
-
+      
       if (user) {
         // Remove from server for logged-in users
         await cartAPI.removeFromCart(productId);
@@ -72,7 +72,7 @@ const Cart = () => {
       toast.success('Item removed from cart');
     } catch (error) {
       console.error('Error removing item:', error);
-      toast.error('Failed to remove item');
+      toast.error('Failed to remove item from cart');
     } finally {
       setLocalLoading(false);
     }
@@ -81,11 +81,13 @@ const Cart = () => {
   const handleClearCart = async () => {
     try {
       setLocalLoading(true);
-
+      
       if (user) {
+        // Clear cart on server for logged-in users
         await cartAPI.clearCart();
         setCart(null);
       } else {
+        // Clear local cart for guest users
         setCart(null);
       }
       
@@ -98,61 +100,61 @@ const Cart = () => {
     }
   };
 
-  const calculateSubtotal = () => {
-    return cart?.items.reduce((total, item) => total + (item.price * item.quantity), 0) || 0;
-  };
-
-  const calculateTax = (subtotal: number) => {
-    return subtotal * 0.08; // 8% tax
-  };
-
-  const calculateShipping = (subtotal: number) => {
-    return subtotal > 50 ? 0 : 9.99; // Free shipping over $50
-  };
-
-  const subtotal = calculateSubtotal();
-  const tax = calculateTax(subtotal);
-  const shipping = calculateShipping(subtotal);
+  // Calculate totals
+  const subtotal = cart?.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0;
+  const tax = subtotal * 0.08; // 8% tax
+  const shipping = subtotal > 50 ? 0 : 9.99; // Free shipping over $50
   const total = subtotal + tax + shipping;
 
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-300 rounded w-64"></div>
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex space-x-4 bg-white p-4 rounded-lg">
-                <div className="h-24 w-24 bg-gray-300 rounded"></div>
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-300 rounded w-64 mb-8"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="bg-white rounded-lg shadow-md p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-24 h-24 bg-gray-300 rounded-lg"></div>
+                    <div className="flex-1">
+                      <div className="h-4 bg-gray-300 rounded w-48 mb-2"></div>
+                      <div className="h-4 bg-gray-300 rounded w-24"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="h-6 bg-gray-300 rounded w-32 mb-4"></div>
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-300 rounded"></div>
+                  <div className="h-4 bg-gray-300 rounded"></div>
+                  <div className="h-4 bg-gray-300 rounded"></div>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  if (!cart || cart.items.length === 0) {
+  if (!cart || !cart.items || cart.items.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-          Shopping Cart
-        </h1>
-        <div className="text-center py-20">
-          <ShoppingBag className="w-24 h-24 text-gray-300 mx-auto mb-6" />
-          <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-300 mb-4">
+        <div className="text-center">
+          <ShoppingBag className="w-24 h-24 text-gray-300 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             Your cart is empty
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-8">
-            Looks like you haven't added any items to your cart yet.
+          <p className="text-gray-600 dark:text-gray-300 mb-8">
+            Looks like you haven't added anything to your cart yet.
           </p>
           <Link
             to="/products"
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center space-x-2"
+            className="inline-flex items-center space-x-2 bg-gold-500 hover:bg-gold-600 text-white px-6 py-3 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Continue Shopping</span>
@@ -166,7 +168,7 @@ const Cart = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Shopping Cart ({cart.items.length} {cart.items.length === 1 ? 'item' : 'items'})
+          Shopping Cart ({cart.items?.length || 0} {(cart.items?.length || 0) === 1 ? 'item' : 'items'})
         </h1>
         <button
           onClick={handleClearCart}
@@ -180,79 +182,86 @@ const Cart = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
-          {cart.items.map((item) => (
-            <div
-              key={item.product._id}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex items-center space-x-4"
-            >
-              {/* Product Image */}
-              <div className="w-24 h-24 flex-shrink-0">
-                <img
-                  src={item.product.images[0]?.url || '/placeholder.jpg'}
-                  alt={item.product.images[0]?.alt || item.product.name}
-                  className="w-full h-full object-cover rounded-lg"
-                />
-              </div>
+          {cart.items && cart.items.map((item) => {
+            // Defensive check for item and product
+            if (!item || !item.product) {
+              return null;
+            }
+            
+            return (
+              <div
+                key={item.product._id}
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex items-center space-x-4"
+              >
+                {/* Product Image */}
+                <div className="w-24 h-24 flex-shrink-0">
+                  <img
+                    src={item.product.images?.[0]?.url || '/placeholder.jpg'}
+                    alt={item.product.images?.[0]?.alt || item.product.name || 'Product image'}
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                </div>
 
-              {/* Product Info */}
-              <div className="flex-1">
-                <Link
-                  to={`/products/${item.product._id}`}
-                  className="text-lg font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                >
-                  {item.product.name}
-                </Link>
-                <p className="text-gray-600 dark:text-gray-300 mt-1">
-                  ${item.price.toFixed(2)} each
-                </p>
-                {user?.isAdmin ? (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    {item.product.stock > 0 ? `${item.product.stock} in stock` : 'Out of stock'}
+                {/* Product Info */}
+                <div className="flex-1">
+                  <Link
+                    to={`/products/${item.product._id}`}
+                    className="text-lg font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                  >
+                    {item.product.name}
+                  </Link>
+                  <p className="text-gray-600 dark:text-gray-300 mt-1">
+                    ${item.price.toFixed(2)} each
                   </p>
-                ) : (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    {item.product.stock > 0 ? 'In Stock' : 'Out of stock'}
+                  {user?.isAdmin ? (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      {item.product.stock > 0 ? `${item.product.stock} in stock` : 'Out of stock'}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      {item.product.stock > 0 ? 'In Stock' : 'Out of stock'}
+                    </p>
+                  )}
+                </div>
+
+                {/* Quantity Controls */}
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => handleUpdateQuantity(item.product._id, item.quantity - 1)}
+                    disabled={item.quantity <= 1 || localLoading}
+                    className="p-1 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="font-semibold text-gray-900 dark:text-white min-w-[2rem] text-center">
+                    {item.quantity}
+                  </span>
+                  <button
+                    onClick={() => handleUpdateQuantity(item.product._id, item.quantity + 1)}
+                    disabled={item.quantity >= item.product.stock || localLoading}
+                    className="p-1 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Item Total */}
+                <div className="text-right">
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                    ${(item.price * item.quantity).toFixed(2)}
                   </p>
-                )}
+                  <button
+                    onClick={() => handleRemoveItem(item.product._id)}
+                    disabled={localLoading}
+                    className="text-red-600 hover:text-red-700 text-sm font-medium mt-1 flex items-center space-x-1 disabled:opacity-50"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    <span>Remove</span>
+                  </button>
+                </div>
               </div>
-
-              {/* Quantity Controls */}
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={() => handleUpdateQuantity(item.product._id, item.quantity - 1)}
-                  disabled={item.quantity <= 1 || localLoading}
-                  className="p-1 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-                <span className="font-semibold text-gray-900 dark:text-white min-w-[2rem] text-center">
-                  {item.quantity}
-                </span>
-                <button
-                  onClick={() => handleUpdateQuantity(item.product._id, item.quantity + 1)}
-                  disabled={item.quantity >= item.product.stock || localLoading}
-                  className="p-1 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Item Total */}
-              <div className="text-right">
-                <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                  ${(item.price * item.quantity).toFixed(2)}
-                </p>
-                <button
-                  onClick={() => handleRemoveItem(item.product._id)}
-                  disabled={localLoading}
-                  className="text-red-600 hover:text-red-700 text-sm font-medium mt-1 flex items-center space-x-1 disabled:opacity-50"
-                >
-                  <Trash2 className="w-3 h-3" />
-                  <span>Remove</span>
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Order Summary */}
@@ -275,53 +284,26 @@ const Cart = () => {
                 <span>Shipping:</span>
                 <span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
               </div>
-              {shipping === 0 && (
-                <p className="text-sm text-green-600 dark:text-green-400">
-                  🎉 You qualify for free shipping!
-                </p>
-              )}
-              {shipping > 0 && (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Add ${(50 - subtotal).toFixed(2)} more for free shipping
-                </p>
-              )}
-              <div className="border-t pt-3">
-                <div className="flex justify-between text-lg font-semibold text-gray-900 dark:text-white">
-                  <span>Total:</span>
-                  <span>${total.toFixed(2)}</span>
-                </div>
+              <hr className="border-gray-200 dark:border-gray-600" />
+              <div className="flex justify-between text-lg font-semibold text-gray-900 dark:text-white">
+                <span>Total:</span>
+                <span>${total.toFixed(2)}</span>
               </div>
             </div>
 
-            <div className="space-y-3">
-              <Link
-                to="/checkout"
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium text-center block"
-              >
-                Proceed to Checkout
-              </Link>
-              <Link
-                to="/products"
-                className="w-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 py-3 px-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-center block"
-              >
-                Continue Shopping
-              </Link>
-            </div>
+            <Link
+              to="/checkout"
+              className="w-full bg-gold-500 hover:bg-gold-600 text-white text-center py-3 px-4 rounded-lg font-medium transition-colors block"
+            >
+              Proceed to Checkout
+            </Link>
 
-            {/* Estimated Delivery */}
-            <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <h4 className="font-medium text-gray-900 dark:text-white mb-2">
-                Estimated Delivery
-              </h4>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                {new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </p>
-            </div>
+            <Link
+              to="/products"
+              className="w-full text-center text-gold-600 hover:text-gold-700 py-2 block mt-3 transition-colors"
+            >
+              Continue Shopping
+            </Link>
           </div>
         </div>
       </div>

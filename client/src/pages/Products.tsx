@@ -421,11 +421,12 @@ const Products = () => {
 
                     {/* Price and Stock */}
                     <div className="flex justify-between items-center mb-4">
-                      <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                      <span className="text-xl font-bold" style={{ color: 'var(--color-gold-dark)' }}>
                         ${product.price.toFixed(2)}
                       </span>
                       {user?.isAdmin ? (
-                        <span className={`text-sm ${
+                        // Admin sees exact stock numbers
+                        <span className={`text-sm font-medium ${
                           product.stock > 10 
                             ? 'text-green-600 dark:text-green-400' 
                             : product.stock > 0 
@@ -435,12 +436,13 @@ const Products = () => {
                           {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
                         </span>
                       ) : (
-                        <span className={`text-sm ${
+                        // Regular users only see availability status
+                        <span className={`text-sm font-medium ${
                           product.stock > 0 
                             ? 'text-green-600 dark:text-green-400' 
                             : 'text-red-600 dark:text-red-400'
                         }`}>
-                          {product.stock > 0 ? 'In Stock' : 'Out of stock'}
+                          {product.stock > 0 ? 'Available' : 'Out of stock'}
                         </span>
                       )}
                     </div>
