@@ -2,9 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { AuthenticatedRequest } from '../types';
 
-// Re-export for convenience
-export { AuthenticatedRequest } from '../types';
-
 interface JwtPayload {
   userId: string;
   isAdmin: boolean;

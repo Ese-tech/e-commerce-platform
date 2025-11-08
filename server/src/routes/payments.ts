@@ -1,6 +1,7 @@
 import express, { Response } from 'express';
 import Stripe from 'stripe';
-import { protect, AuthenticatedRequest } from '../middleware/auth';
+import { protect } from '../middleware/auth';
+import { AuthenticatedRequest } from '../types';
 import Order from '../models/Order';
 import Product from '../models/Product';
 import User from '../models/User';
