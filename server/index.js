@@ -11,12 +11,20 @@ const productRoutes = require('./routes/products');
 const cartRoutes = require('./routes/cart');
 const orderRoutes = require('./routes/orders');
 const userRoutes = require('./routes/users');
+const settingsRoutes = require('./routes/settings');
+const paymentRoutes = require('./routes/payments');
 
 const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: [
+    process.env.CLIENT_URL || 'http://localhost:3000',
+    'https://e-commerce-platform-plum.vercel.app',
+    'https://e-commerce-platform-btso.vercel.app',
+    'https://e-commerce-platform-git-main-ese-techs-projects.vercel.app',
+    /https:\/\/e-commerce-platform-.*\.vercel\.app$/
+  ],
   credentials: true,
 }));
 app.use(express.json());
@@ -42,6 +50,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/admin/settings', settingsRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
