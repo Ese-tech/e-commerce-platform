@@ -15,9 +15,9 @@
 ### 3. Build Konfiguration
 ```
 Framework Preset: Other
-Build Command: cd client && bun run build
+Build Command: cd client && npm run build
 Output Directory: client/dist
-Install Command: bun install
+Install Command: cd client && npm install --legacy-peer-deps
 ```
 
 ### 4. Environment Variables einrichten
