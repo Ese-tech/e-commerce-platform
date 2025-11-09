@@ -236,9 +236,9 @@ module.exports = async (req, res) => {
 
       const hashedPassword = await bcrypt.hash(password, 10);
       
-      // Check if this is the first user - make them admin
+      // Check if this is the first user or explicitly requested admin
       const userCount = await User.countDocuments();
-      const role = userCount === 0 || isAdmin ? 'admin' : 'user';
+      const role = userCount === 0 || isAdmin === true ? 'admin' : 'user';
       
       const user = new User({ 
         name, 
@@ -251,7 +251,8 @@ module.exports = async (req, res) => {
 
       return res.status(201).json({ 
         message: 'User created successfully',
-        role: role
+        role: role,
+        isAdmin: role === 'admin'
       });
     } catch (error) {
       console.error('Register error:', error);
