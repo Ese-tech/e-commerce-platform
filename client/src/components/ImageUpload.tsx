@@ -81,7 +81,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       reader.readAsDataURL(file);
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Failed to upload image. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload image. Please try again.';
+      alert(errorMessage);
     } finally {
       setUploading(false);
     }

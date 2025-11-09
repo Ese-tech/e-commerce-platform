@@ -363,6 +363,13 @@ module.exports = async (req, res) => {
   // Upload Profile Picture
   if (url.includes('/api/auth/upload-avatar') && req.method === 'POST') {
     try {
+      // Check if Cloudinary is configured
+      if (!process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+        return res.status(500).json({ 
+          message: 'Image upload service not configured. Please contact administrator.' 
+        });
+      }
+
       const cookies = req.headers.cookie || '';
       const tokenMatch = cookies.match(/token=([^;]+)/);
       
@@ -386,7 +393,6 @@ module.exports = async (req, res) => {
 
       // Upload to Cloudinary
       const uploadResponse = await cloudinary.uploader.upload(imageData, {
-        upload_preset: 'profile_pictures', // You'll need to create this preset in Cloudinary
         folder: 'ecommerce/profiles',
         public_id: `user_${decoded.userId}_${Date.now()}`,
         transformation: [
@@ -416,9 +422,21 @@ module.exports = async (req, res) => {
       });
     } catch (error) {
       console.error('Upload avatar error:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = 'Error uploading profile picture';
+      if (error.message.includes('cloudinary')) {
+        errorMessage = 'Cloudinary configuration error. Please check API credentials.';
+      } else if (error.message.includes('Invalid image')) {
+        errorMessage = 'Invalid image format. Please use JPG, PNG, or WEBP.';
+      } else if (error.message.includes('File too large')) {
+        errorMessage = 'Image file is too large. Please use an image under 10MB.';
+      }
+      
       return res.status(500).json({ 
-        message: 'Error uploading profile picture',
-        error: error.message 
+        message: errorMessage,
+        error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
       });
     }
   }
