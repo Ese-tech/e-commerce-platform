@@ -9,15 +9,23 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
 
+// CORS configuration for both development and production
+const corsOrigins = [
+  process.env.CLIENT_URL || 'https://e-commerce-platform-vert.vercel.app',
+  'https://e-commerce-platform-plum.vercel.app',
+  'https://e-commerce-platform-btso.vercel.app',
+  'https://e-commerce-platform-vert.vercel.app',
+  'https://e-commerce-platform-git-main-ese-techs-projects.vercel.app',
+  /https:\/\/e-commerce-platform-.*\.vercel\.app$/
+];
+
+// Add local development origins if in development mode
+if (process.env.NODE_ENV === 'development') {
+  corsOrigins.push('http://localhost:5173', 'http://localhost:3000');
+}
+
 app.use(cors({
-  origin: [
-    process.env.CLIENT_URL || 'http://localhost:3000',
-    'https://e-commerce-platform-plum.vercel.app',
-    'https://e-commerce-platform-btso.vercel.app',
-    'https://e-commerce-platform-vert.vercel.app',
-    'https://e-commerce-platform-git-main-ese-techs-projects.vercel.app',
-    /https:\/\/e-commerce-platform-.*\.vercel\.app$/
-  ],
+  origin: corsOrigins,
   credentials: true,
 }));
 app.use(express.json());
