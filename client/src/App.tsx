@@ -37,6 +37,7 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminSettings from './pages/admin/AdminSettings';
+import AdminProfile from './pages/admin/AdminProfile';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -84,6 +85,7 @@ const AppLayout = () => {
             <Route path="orders" element={<AdminOrders />} />
             <Route path="analytics" element={<AdminAnalytics />} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="profile" element={<AdminProfile />} />
           </Route>
           
           <Route path="*" element={<NotFound />} />

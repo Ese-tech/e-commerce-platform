@@ -288,6 +288,56 @@ module.exports = async (req, res) => {
     }
   }
 
+  // Auth Profile Update
+  if (url.includes('/api/auth/profile') && req.method === 'PUT') {
+    try {
+      const cookies = req.headers.cookie || '';
+      const tokenMatch = cookies.match(/token=([^;]+)/);
+      
+      if (!tokenMatch) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+
+      const token = tokenMatch[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-key');
+      
+      if (!isConnected) {
+        return res.status(503).json({ message: 'Database connection unavailable' });
+      }
+
+      const updateData = await parseBody(req);
+      
+      // Remove sensitive fields that shouldn't be updated via this endpoint
+      delete updateData.password;
+      delete updateData.email;
+      delete updateData.role;
+      delete updateData._id;
+      delete updateData.createdAt;
+      delete updateData.updatedAt;
+
+      const updatedUser = await User.findByIdAndUpdate(
+        decoded.userId,
+        { $set: updateData },
+        { new: true, runValidators: true }
+      ).select('-password');
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      return res.status(200).json({ 
+        message: 'Profile updated successfully',
+        user: {
+          ...updatedUser.toObject(),
+          isAdmin: updatedUser.role === 'admin'
+        }
+      });
+    } catch (error) {
+      console.error('Profile update error:', error);
+      return res.status(500).json({ message: 'Error updating profile' });
+    }
+  }
+
   // Auth Logout
   if (url.includes('/api/auth/logout') && req.method === 'POST') {
     res.setHeader('Set-Cookie', 'token=; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=0');

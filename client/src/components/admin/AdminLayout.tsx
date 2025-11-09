@@ -147,7 +147,7 @@ const AdminLayout = () => {
               
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-gray-500 dark:text-gray-400">Welcome back,</span>
-                <div className="flex items-center space-x-2">
+                <Link to="/admin/profile" className="flex items-center space-x-2 hover:bg-gray-50 dark:hover:bg-gray-700 px-2 py-1 rounded-lg transition-colors">
                   {user?.profilePicture?.url ? (
                     <img
                       src={user.profilePicture.url}
@@ -162,7 +162,7 @@ const AdminLayout = () => {
                     </div>
                   )}
                   <span className="text-sm font-medium text-gray-900 dark:text-white">{user?.name}</span>
-                </div>
+                </Link>
                 
                 <Link
                   to="/"
