@@ -32,17 +32,23 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: true });
           const response = await authAPI.login({ email, password });
           
-          if (response.data?.data?.user) {
+          // Handle both possible response structures
+          const user = response.data?.user || response.data?.data?.user;
+          
+          if (user) {
             set({ 
-              user: response.data.data.user, 
+              user: user, 
               isAuthenticated: true,
               isLoading: false 
             });
             toast.success('Login successful!');
+          } else {
+            // If login successful but no user data, that's still an error
+            throw new Error('Login response missing user data');
           }
         } catch (error: any) {
           set({ isLoading: false });
-          const message = error.response?.data?.message || 'Login failed';
+          const message = error.response?.data?.message || error.message || 'Login failed';
           toast.error(message);
           throw error;
         }

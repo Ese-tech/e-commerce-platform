@@ -59,6 +59,7 @@ const Register = () => {
                   <User className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
+                  id="name"
                   {...register('name', {
                     required: 'Name is required',
                     minLength: {
@@ -89,6 +90,7 @@ const Register = () => {
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
+                  id="email"
                   {...register('email', {
                     required: 'Email is required',
                     pattern: {
@@ -119,6 +121,7 @@ const Register = () => {
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
+                  id="password"
                   {...register('password', {
                     required: 'Password is required',
                     minLength: {
@@ -160,6 +163,7 @@ const Register = () => {
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
+                  id="confirmPassword"
                   {...register('confirmPassword', {
                     required: 'Please confirm your password',
                     validate: (value) =>
