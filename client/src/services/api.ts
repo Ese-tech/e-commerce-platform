@@ -1,6 +1,11 @@
 import axios, { type AxiosResponse, type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+// Use environment variable with fallback for different environments
+const API_URL = import.meta.env.VITE_API_URL || (
+  import.meta.env.DEV ? 'http://localhost:5000/api' : '/api'
+);
+
+console.log('API_URL:', API_URL); // Debug log to see which URL is being used
 
 // Create axios instance with default config
 export const api = axios.create({
