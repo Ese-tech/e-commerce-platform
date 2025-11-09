@@ -32,8 +32,18 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: true });
           const response = await authAPI.login({ email, password });
           
-          // Handle both possible response structures
-          const user = response.data?.user || response.data?.data?.user;
+          // Handle different response structures
+          let user: User | null = null;
+          
+          // Try different possible response structures
+          if (response.data?.data?.user) {
+            user = response.data.data.user;
+          } else if (response.data?.user) {
+            user = response.data.user;
+          } else if (response.data?.name) {
+            // Direct user object in response.data
+            user = response.data as User;
+          }
           
           if (user) {
             set({ 

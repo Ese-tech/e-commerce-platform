@@ -12,16 +12,16 @@ import type {
 // Auth API
 export const authAPI = {
   register: (userData: { name: string; email: string; password: string }) =>
-    api.post<ApiResponse<{ user: User; token: string }>>('/auth/register', userData),
+    api.post<ApiResponse<{ user: User; token: string }> | { message: string }>('/auth/register', userData),
   
   login: (credentials: { email: string; password: string }) =>
-    api.post<ApiResponse<{ user: User; token: string }>>('/auth/login', credentials),
+    api.post<ApiResponse<{ user: User; token: string }> | { message: string; user: User }>('/auth/login', credentials),
   
   logout: () =>
     api.post<ApiResponse<null>>('/auth/logout'),
   
   getProfile: () =>
-    api.get<ApiResponse<User>>('/auth/profile'),
+    api.get<ApiResponse<User> | { user: User }>('/auth/profile'),
   
   updateProfile: (userData: Partial<User>) =>
     api.put<ApiResponse<User>>('/auth/profile', userData),
