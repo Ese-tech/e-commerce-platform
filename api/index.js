@@ -1,6 +1,14 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { v2: cloudinary } = require('cloudinary');
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dm7qehsww',
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // MongoDB connection
 let isConnected = false;
@@ -32,6 +40,20 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, default: 'user' },
+  profilePicture: { type: String, default: '' },
+  phone: { type: String, default: '' },
+  address: {
+    street: { type: String, default: '' },
+    city: { type: String, default: '' },
+    state: { type: String, default: '' },
+    zipCode: { type: String, default: '' },
+    country: { type: String, default: '' }
+  },
+  preferences: {
+    language: { type: String, default: 'en' },
+    currency: { type: String, default: 'USD' },
+    notifications: { type: Boolean, default: true }
+  },
   wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
   createdAt: { type: Date, default: Date.now }
 });
@@ -335,6 +357,69 @@ module.exports = async (req, res) => {
     } catch (error) {
       console.error('Profile update error:', error);
       return res.status(500).json({ message: 'Error updating profile' });
+    }
+  }
+
+  // Upload Profile Picture
+  if (url.includes('/api/auth/upload-avatar') && req.method === 'POST') {
+    try {
+      const cookies = req.headers.cookie || '';
+      const tokenMatch = cookies.match(/token=([^;]+)/);
+      
+      if (!tokenMatch) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+
+      const token = tokenMatch[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-key');
+      
+      if (!isConnected) {
+        return res.status(503).json({ message: 'Database connection unavailable' });
+      }
+
+      const body = await parseBody(req);
+      const { imageData } = body;
+
+      if (!imageData) {
+        return res.status(400).json({ message: 'No image data provided' });
+      }
+
+      // Upload to Cloudinary
+      const uploadResponse = await cloudinary.uploader.upload(imageData, {
+        upload_preset: 'profile_pictures', // You'll need to create this preset in Cloudinary
+        folder: 'ecommerce/profiles',
+        public_id: `user_${decoded.userId}_${Date.now()}`,
+        transformation: [
+          { width: 300, height: 300, crop: 'fill', gravity: 'face' },
+          { quality: 'auto', fetch_format: 'auto' }
+        ]
+      });
+
+      // Update user's profile picture
+      const updatedUser = await User.findByIdAndUpdate(
+        decoded.userId,
+        { profilePicture: uploadResponse.secure_url },
+        { new: true, select: '-password' }
+      );
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      return res.status(200).json({ 
+        message: 'Profile picture updated successfully',
+        profilePicture: uploadResponse.secure_url,
+        user: {
+          ...updatedUser.toObject(),
+          isAdmin: updatedUser.role === 'admin'
+        }
+      });
+    } catch (error) {
+      console.error('Upload avatar error:', error);
+      return res.status(500).json({ 
+        message: 'Error uploading profile picture',
+        error: error.message 
+      });
     }
   }
 

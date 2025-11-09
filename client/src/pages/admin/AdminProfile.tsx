@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/authStore';
+import { getProfilePictureUrl, hasProfilePicture } from '../../utils/userUtils';
 import { 
   User, 
   Shield, 
@@ -106,7 +107,7 @@ const AdminProfile = () => {
     });
   };
 
-  if (!user?.isAdmin) {
+  if (!user || !user.isAdmin) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -164,9 +165,9 @@ const AdminProfile = () => {
             <div className="text-center">
               {/* Profile Picture */}
               <div className="relative inline-block">
-                {user.profilePicture?.url ? (
+                {hasProfilePicture(user.profilePicture) ? (
                   <img
-                    src={user.profilePicture.url}
+                    src={getProfilePictureUrl(user.profilePicture)}
                     alt={user.name}
                     className="w-24 h-24 rounded-full mx-auto object-cover border-4"
                     style={{ borderColor: 'var(--gold-500)' }}

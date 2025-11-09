@@ -12,6 +12,7 @@ import {
   X
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { getProfilePictureUrl, hasProfilePicture } from '../../utils/userUtils';
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -148,10 +149,10 @@ const AdminLayout = () => {
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-gray-500 dark:text-gray-400">Welcome back,</span>
                 <Link to="/admin/profile" className="flex items-center space-x-2 hover:bg-gray-50 dark:hover:bg-gray-700 px-2 py-1 rounded-lg transition-colors">
-                  {user?.profilePicture?.url ? (
+                  {hasProfilePicture(user?.profilePicture) ? (
                     <img
-                      src={user.profilePicture.url}
-                      alt={user.name}
+                      src={getProfilePictureUrl(user?.profilePicture)}
+                      alt={user?.name || 'Admin'}
                       className="w-8 h-8 rounded-full"
                     />
                   ) : (

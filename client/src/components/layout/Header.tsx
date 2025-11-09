@@ -16,6 +16,10 @@ import { useAuthStore } from '../../store/authStore';
 import { useCartStore } from '../../store/cartStore';
 import { useThemeStore } from '../../store/themeStore';
 import { useSettingsStore } from '../../store/settingsStore';
+import { useLanguageStore } from '../../store/languageStore';
+import { translations } from '../../i18n/translations';
+import { getProfilePictureUrl, hasProfilePicture } from '../../utils/userUtils';
+import LanguageSelector from '../LanguageSelector';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -25,8 +29,10 @@ const Header = () => {
   const { getItemCount } = useCartStore();
   const { theme, toggleTheme } = useThemeStore();
   const { settings } = useSettingsStore();
+  const { language } = useLanguageStore();
 
   const cartItemsCount = getItemCount();
+  const t = translations[language];
 
   // Fetch settings when component mounts
   useEffect(() => {
@@ -74,7 +80,7 @@ const Header = () => {
             <div className="relative w-full">
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder={t.common.search + '...'}
                 className="input-field w-full pl-10 pr-4 py-2"
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
@@ -104,6 +110,9 @@ const Header = () => {
               )}
             </button>
 
+            {/* Language Selector */}
+            <LanguageSelector variant="compact" className="hidden md:block" />
+
             {/* Navigation Links - Hidden on mobile */}
             <nav className="hidden md:flex items-center space-x-4">
               <Link
@@ -122,7 +131,7 @@ const Header = () => {
                     : undefined
                 }}
               >
-                Products
+                {t.nav.products}
               </Link>
               
               {isAuthenticated && (
@@ -200,10 +209,10 @@ const Header = () => {
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
-                  {user?.profilePicture?.url ? (
+                  {hasProfilePicture(user?.profilePicture) ? (
                     <img
-                      src={user.profilePicture.url}
-                      alt={user.name}
+                      src={getProfilePictureUrl(user?.profilePicture)}
+                      alt={user?.name || 'User'}
                       className="w-6 h-6 rounded-full"
                     />
                   ) : (
@@ -221,21 +230,21 @@ const Header = () => {
                       className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       onClick={() => setIsUserMenuOpen(false)}
                     >
-                      Profile
+                      {t.nav.profile}
                     </Link>
                     <Link
                       to="/orders"
                       className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 md:hidden"
                       onClick={() => setIsUserMenuOpen(false)}
                     >
-                      Orders
+                      {t.nav.orders}
                     </Link>
                     <Link
                       to="/wishlist"
                       className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 md:hidden"
                       onClick={() => setIsUserMenuOpen(false)}
                     >
-                      Wishlist
+                      {t.nav.wishlist}
                     </Link>
                     {user?.isAdmin && (
                       <Link
@@ -248,7 +257,7 @@ const Header = () => {
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <Package className="w-4 h-4" />
-                        <span>Admin Panel</span>
+                        <span>{t.admin.adminPanel}</span>
                       </Link>
                     )}
                     <button
@@ -256,7 +265,7 @@ const Header = () => {
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
                     >
                       <LogOut className="w-4 h-4" />
-                      <span>Logout</span>
+                      <span>{t.nav.logout}</span>
                     </button>
                   </div>
                 )}
@@ -268,13 +277,13 @@ const Header = () => {
                   className="px-3 py-2 text-sm transition-all duration-300 hover:text-opacity-80"
                   style={{ color: 'var(--color-nude-darker)' }}
                 >
-                  Login
+                  {t.nav.login}
                 </Link>
                 <Link
                   to="/register"
                   className="btn-primary text-sm"
                 >
-                  Sign Up
+                  {t.nav.register}
                 </Link>
               </div>
             )}
@@ -302,7 +311,7 @@ const Header = () => {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Search products..."
+                  placeholder={t.common.search + '...'}
                   className="input-field w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
@@ -320,6 +329,11 @@ const Header = () => {
 
             {/* Mobile Navigation */}
             <nav className="space-y-2">
+              {/* Language Selector for Mobile */}
+              <div className="px-3 py-2">
+                <LanguageSelector variant="flags" className="justify-center" />
+              </div>
+              
               <Link
                 to="/products"
                 className="block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -328,7 +342,7 @@ const Header = () => {
                 }}
                 onClick={() => setIsMenuOpen(false)}
               >
-                Products
+                {t.nav.products}
               </Link>
               
               {!isAuthenticated ? (
@@ -341,14 +355,14 @@ const Header = () => {
                     }}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Login
+                    {t.nav.login}
                   </Link>
                   <Link
                     to="/register"
                     className="btn-primary block text-center text-base font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Sign Up
+                    {t.nav.register}
                   </Link>
                 </>
               ) : (
@@ -361,7 +375,7 @@ const Header = () => {
                     }}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Profile
+                    {t.nav.profile}
                   </Link>
                   <Link
                     to="/orders"
@@ -371,7 +385,7 @@ const Header = () => {
                     }}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Orders
+                    {t.nav.orders}
                   </Link>
                   <Link
                     to="/wishlist"
@@ -381,7 +395,7 @@ const Header = () => {
                     }}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Wishlist
+                    {t.nav.wishlist}
                   </Link>
                   <button
                     onClick={() => {
@@ -394,7 +408,7 @@ const Header = () => {
                     }}
                   >
                     <LogOut className="w-4 h-4" />
-                    <span>Logout</span>
+                    <span>{t.nav.logout}</span>
                   </button>
                 </>
               )}

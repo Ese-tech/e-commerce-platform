@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
-import { User, Camera, Mail, Phone, MapPin, Calendar, Shield, Edit2, Save, X } from 'lucide-react';
+import { useLanguageStore } from '../store/languageStore';
+import { translations } from '../i18n/translations';
+import { getProfilePictureUrl } from '../utils/userUtils';
+import { User, Mail, Phone, MapPin, Calendar, Shield, Edit2, Save, X } from 'lucide-react';
+import ImageUpload from '../components/ImageUpload';
 import toast from 'react-hot-toast';
 
 interface EditableField {
@@ -10,6 +14,8 @@ interface EditableField {
 
 const Profile = () => {
   const { user, updateUser, isLoading } = useAuthStore();
+  const { language } = useLanguageStore();
+  const t = translations[language];
   const [editingField, setEditingField] = useState<EditableField>({ field: '', isEditing: false });
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -74,6 +80,26 @@ const Profile = () => {
     });
   };
 
+  const handleImageUpload = async (imageUrl: string) => {
+    try {
+      await updateUser({ profilePicture: imageUrl });
+      toast.success(t.messages.profileUpdated);
+    } catch (error) {
+      console.error('Profile picture update error:', error);
+      toast.error(t.messages.profileUpdateFailed);
+    }
+  };
+
+  const handleImageRemove = async () => {
+    try {
+      await updateUser({ profilePicture: '' });
+      toast.success('Profile picture removed successfully');
+    } catch (error) {
+      console.error('Profile picture removal error:', error);
+      toast.error('Failed to remove profile picture');
+    }
+  };
+
   const handleSave = async (field: string) => {
     try {
       let updateData: any = {};
@@ -129,9 +155,9 @@ const Profile = () => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          My Profile
+          {t.profile.myProfile}
         </h1>
-        <p className="text-gray-600 dark:text-gray-300">
+        <p className="text-gray-600 dark:text-gray-300 mb-8">
           Manage your account settings and personal information
         </p>
       </div>
@@ -142,22 +168,14 @@ const Profile = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div className="text-center">
               {/* Profile Picture */}
-              <div className="relative inline-block">
-                {user.profilePicture?.url ? (
-                  <img
-                    src={user.profilePicture.url}
-                    alt={user.name}
-                    className="w-24 h-24 rounded-full mx-auto object-cover"
-                  />
-                ) : (
-                  <div className="w-24 h-24 rounded-full mx-auto flex items-center justify-center"
-                       style={{ background: 'var(--gradient-gold)' }}>
-                    <User className="w-12 h-12" style={{ color: 'var(--text-on-gold)' }} />
-                  </div>
-                )}
-                <button className="absolute bottom-0 right-0 bg-white dark:bg-gray-700 rounded-full p-2 shadow-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                  <Camera className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                </button>
+                            <div className="flex justify-center mb-4">
+                <ImageUpload
+                  currentImage={getProfilePictureUrl(user.profilePicture)}
+                  onImageUpload={handleImageUpload}
+                  onImageRemove={handleImageRemove}
+                  size="lg"
+                  shape="circle"
+                />
               </div>
 
               {/* Name */}
@@ -215,14 +233,14 @@ const Profile = () => {
             {/* Personal Information */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-                Personal Information
+                {t.profile.personalInformation}
               </h3>
               
               <div className="space-y-6">
                 {/* Name Field */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Full Name
+                    {t.profile.fullName}
                   </label>
                   <div className="flex items-center space-x-3">
                     {editingField.field === 'name' && editingField.isEditing ? (
@@ -269,7 +287,7 @@ const Profile = () => {
                 {/* Email Field */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Email Address
+                    {t.profile.emailAddress}
                   </label>
                   <div className="flex items-center space-x-3">
                     <Mail className="w-5 h-5 text-gray-400" />
@@ -285,7 +303,7 @@ const Profile = () => {
                 {/* Phone Field */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Phone Number
+                    {t.profile.phoneNumber}
                   </label>
                   <div className="flex items-center space-x-3">
                     {editingField.field === 'phone' && editingField.isEditing ? (
@@ -336,7 +354,7 @@ const Profile = () => {
             {/* Address Information */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-                Address Information
+                {t.profile.addressInformation}
               </h3>
               
               {editingField.field === 'address' && editingField.isEditing ? (
@@ -462,7 +480,7 @@ const Profile = () => {
             {/* Preferences */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-                Preferences
+                {t.profile.preferences}
               </h3>
               
               <div className="space-y-4">
