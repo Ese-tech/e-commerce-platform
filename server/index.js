@@ -22,6 +22,7 @@ app.use(cors({
     process.env.CLIENT_URL || 'http://localhost:3000',
     'https://e-commerce-platform-plum.vercel.app',
     'https://e-commerce-platform-btso.vercel.app',
+    'https://e-commerce-platform-vert.vercel.app',
     'https://e-commerce-platform-git-main-ese-techs-projects.vercel.app',
     /https:\/\/e-commerce-platform-.*\.vercel\.app$/
   ],
