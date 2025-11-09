@@ -230,6 +230,69 @@ module.exports = async (req, res) => {
     return res.status(200).json({ message: 'Logged out successfully' });
   }
 
+  // Users/Wishlist endpoints
+  if (url.includes('/api/users/wishlist') && req.method === 'GET') {
+    try {
+      const cookies = req.headers.cookie || '';
+      const tokenMatch = cookies.match(/token=([^;]+)/);
+      
+      if (!tokenMatch) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+
+      // For now, return empty wishlist
+      return res.status(200).json([]);
+    } catch (error) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+  }
+
+  // Cart endpoints
+  if (url.includes('/api/cart') && req.method === 'GET') {
+    try {
+      const cookies = req.headers.cookie || '';
+      const tokenMatch = cookies.match(/token=([^;]+)/);
+      
+      if (!tokenMatch) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+
+      // For now, return empty cart
+      return res.status(200).json({
+        items: [],
+        total: 0,
+        itemCount: 0
+      });
+    } catch (error) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+  }
+
+  // Orders endpoints
+  if (url.includes('/api/orders') && req.method === 'GET') {
+    try {
+      const cookies = req.headers.cookie || '';
+      const tokenMatch = cookies.match(/token=([^;]+)/);
+      
+      if (!tokenMatch) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+
+      // For now, return empty orders
+      return res.status(200).json({
+        orders: [],
+        pagination: {
+          page: 1,
+          limit: 10,
+          total: 0,
+          pages: 0
+        }
+      });
+    } catch (error) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+  }
+
   // Products endpoint
   if (url.includes('/api/products') && req.method === 'GET') {
     return res.status(200).json({
