@@ -32,17 +32,16 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: true });
           const response = await authAPI.login({ email, password });
           
-          // Handle different response structures
+          // Handle different response structures with type casting
+          const responseData = response.data as any;
           let user: User | null = null;
           
-          // Try different possible response structures
-          if (response.data?.data?.user) {
-            user = response.data.data.user;
-          } else if (response.data?.user) {
-            user = response.data.user;
-          } else if (response.data?.name) {
-            // Direct user object in response.data
-            user = response.data as User;
+          if (responseData?.data?.user) {
+            user = responseData.data.user;
+          } else if (responseData?.user) {
+            user = responseData.user;
+          } else if (responseData?.name && responseData?.email) {
+            user = responseData;
           }
           
           if (user) {
@@ -53,7 +52,6 @@ export const useAuthStore = create<AuthState>()(
             });
             toast.success('Login successful!');
           } else {
-            // If login successful but no user data, that's still an error
             throw new Error('Login response missing user data');
           }
         } catch (error: any) {
@@ -69,17 +67,14 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: true });
           const response = await authAPI.register({ name, email, password });
           
-          if (response.data?.data?.user) {
-            set({ 
-              user: response.data.data.user, 
-              isAuthenticated: true,
-              isLoading: false 
-            });
-            toast.success('Registration successful!');
-          }
+          const responseData = response.data as any;
+          const message = responseData?.message || 'Registration successful';
+          
+          set({ isLoading: false });
+          toast.success(message);
         } catch (error: any) {
           set({ isLoading: false });
-          const message = error.response?.data?.message || 'Registration failed';
+          const message = error.response?.data?.message || error.message || 'Registration failed';
           toast.error(message);
           throw error;
         }
@@ -99,19 +94,28 @@ export const useAuthStore = create<AuthState>()(
 
       loadUser: async () => {
         try {
-          set({ isLoading: true });
           const response = await authAPI.getProfile();
           
-          if (response.data?.data) {
+          const responseData = response.data as any;
+          let user: User | null = null;
+          
+          if (responseData?.data) {
+            user = responseData.data;
+          } else if (responseData?.user) {
+            user = responseData.user;
+          } else if (responseData?.name && responseData?.email) {
+            user = responseData;
+          }
+          
+          if (user) {
             set({ 
-              user: response.data.data, 
-              isAuthenticated: true,
-              isLoading: false 
+              user: user, 
+              isAuthenticated: true 
             });
           }
-        } catch (error: any) {
-          set({ user: null, isAuthenticated: false, isLoading: false });
-          console.error('Load user error:', error);
+        } catch (error) {
+          // Silent fail for loadUser - user just isn't logged in
+          set({ user: null, isAuthenticated: false });
         }
       },
 
@@ -120,8 +124,19 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: true });
           const response = await authAPI.updateProfile(userData);
           
-          if (response.data?.data) {
-            set({ user: response.data.data, isLoading: false });
+          const responseData = response.data as any;
+          let user: User | null = null;
+          
+          if (responseData?.data) {
+            user = responseData.data;
+          } else if (responseData?.user) {
+            user = responseData.user;
+          } else if (responseData?.name && responseData?.email) {
+            user = responseData;
+          }
+          
+          if (user) {
+            set({ user: user, isLoading: false });
             toast.success('Profile updated successfully!');
           }
         } catch (error: any) {
