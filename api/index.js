@@ -54,10 +54,24 @@ const parseBody = (req) => {
 };
 
 module.exports = async (req, res) => {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS headers - be specific about origin for credentials
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'https://e-commerce-platform-vert.vercel.app',
+    'https://e-commerce-platform-plum.vercel.app',
+    'https://e-commerce-platform-btso.vercel.app',
+    'https://e-commerce-platform-git-main-ese-techs-projects.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ];
+  
+  if (allowedOrigins.includes(origin) || origin?.includes('e-commerce-platform') && origin?.includes('vercel.app')) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Content-Type', 'application/json');
 
   // Handle preflight
